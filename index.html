@@ -17,7 +17,7 @@
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px; /* Reduced padding for smaller screens */
             box-sizing: border-box;
             overflow-x: hidden; /* Prevent horizontal scroll */
         }
@@ -26,8 +26,8 @@
             background-color: #ffffff;
             border-radius: 1.5rem; /* Increased border radius for modern look */
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Stronger shadow */
-            padding: 1.5rem; /* Reduced padding for mobile */
-            max-width: 95%; /* Responsive max-width */
+            padding: 1rem; /* Adjusted padding for mobile */
+            max-width: 98%; /* Responsive max-width */
             width: 100%;
             min-height: 85vh; /* Minimum height for better layout */
             display: flex;
@@ -48,8 +48,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding: 0 0.5rem; /* Adjust padding for mobile */
+            margin-bottom: 1rem; /* Adjusted margin */
+            padding: 0 0.25rem; /* Adjusted padding for mobile */
         }
 
         .add-book-button {
@@ -66,6 +66,10 @@
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            user-select: none; /* Prevent text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .add-book-button:hover {
@@ -79,10 +83,25 @@
             box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
+        /* Force hide the actual file input to avoid "Escolher arquivo" button */
+        input[type="file"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+            appearance: none; /* For Webkit browsers */
+            -webkit-appearance: none;
+        }
+
         .book-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* More responsive grid */
-            gap: 1rem; /* Spacing between book cards */
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* More responsive grid for smaller screens */
+            gap: 0.75rem; /* Smaller gap for mobile */
             flex-grow: 1;
             overflow-y: auto; /* Scroll for books */
             padding-right: 5px; /* Prevent scrollbar from overlapping content */
@@ -107,8 +126,8 @@
         }
 
         .book-card-cover {
-            width: 100px; /* Fixed width for covers */
-            height: 140px; /* Fixed height for covers (aspect ratio for books) */
+            width: 80px; /* Adjusted fixed width for covers for smaller screens */
+            height: 112px; /* Adjusted fixed height for covers (aspect ratio for books) */
             object-fit: cover;
             border-radius: 0.5rem;
             margin-bottom: 0.5rem;
@@ -116,7 +135,7 @@
         }
 
         .book-card-title {
-            font-size: 0.875rem; /* Smaller text for mobile */
+            font-size: 0.75rem; /* Smaller text for mobile */
             font-weight: 500;
             color: #374151;
             overflow: hidden;
@@ -132,7 +151,7 @@
             flex-direction: column;
             height: 100%;
             width: 100%;
-            gap: 1rem;
+            gap: 0.75rem; /* Smaller gap */
             position: absolute; /* Allow transition from library */
             top: 0;
             left: 0;
@@ -140,6 +159,7 @@
             border-radius: 1.5rem;
             transition: transform 0.4s ease-out, opacity 0.4s ease-out;
             transform: translateX(100%); /* Start off-screen right */
+            padding: 1rem; /* Consistent padding with container */
         }
 
         #reader-view.active {
@@ -150,15 +170,15 @@
         .reader-header {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 0 0.5rem;
+            gap: 0.75rem; /* Smaller gap */
+            padding: 0 0.25rem; /* Adjusted padding */
         }
 
         .back-button {
             background-color: #6b7280; /* Gray */
             color: white;
             border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem; /* Smaller padding */
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease;
@@ -166,7 +186,7 @@
         .back-button:hover { background-color: #4b5563; }
 
         .current-book-title {
-            font-size: 1.25rem;
+            font-size: 1.1rem; /* Slightly smaller for mobile header */
             font-weight: 600;
             color: #1f2937;
             white-space: nowrap;
@@ -195,10 +215,10 @@
             padding: 1rem;
             white-space: pre-wrap; /* Preserve whitespace and wrap text */
             overflow-y: auto; /* Enable scrolling for text content */
-            font-size: 1rem;
-            line-height: 1.6;
+            font-size: 0.9rem; /* Smaller font for text content */
+            line-height: 1.5; /* Adjusted line height */
             color: #374151;
-            min-height: 300px; /* Ensure a minimum height for text content */
+            min-height: 250px; /* Adjusted minimum height for text content */
             resize: vertical; /* Allow manual resizing of text area */
         }
 
@@ -206,13 +226,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 1.5rem;
-            margin-top: 1rem;
-            padding-bottom: 1rem; /* Add padding for mobile bottom */
+            gap: 1rem; /* Smaller gap */
+            margin-top: 0.75rem; /* Adjusted margin */
+            padding-bottom: 0.5rem; /* Add padding for mobile bottom */
         }
 
         .page-control-button {
-            padding: 0.6rem 1.2rem; /* Smaller padding for mobile */
+            padding: 0.5rem 1rem; /* Smaller padding for mobile */
             background-color: #4f46e5; /* Indigo */
             color: white;
             border-radius: 0.75rem;
@@ -246,11 +266,11 @@
             align-items: center;
             border-radius: 1.5rem;
             z-index: 10;
-            font-size: 1.2rem;
+            font-size: 1.1rem; /* Slightly smaller font */
             font-weight: 600;
             color: #4f46e5;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.75rem; /* Smaller gap */
         }
 
         /* Basic spinner */
@@ -258,8 +278,8 @@
             border: 4px solid rgba(0, 0, 0, 0.1);
             border-left-color: #4f46e5;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 35px; /* Smaller spinner */
+            height: 35px;
             animation: spin 1s linear infinite;
         }
 
@@ -269,11 +289,11 @@
 
         .message-box {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 15px; /* Adjusted position */
+            right: 15px; /* Adjusted position */
             background-color: #10b981; /* Green for success */
             color: white;
-            padding: 15px 20px;
+            padding: 12px 18px; /* Adjusted padding */
             border-radius: 0.75rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             opacity: 0;
@@ -282,6 +302,7 @@
             z-index: 1000;
             max-width: 90%; /* Responsive width */
             text-align: center;
+            font-size: 0.9rem; /* Smaller font size */
         }
 
         .message-box.show {
@@ -310,12 +331,13 @@
                 <label for="pdf-upload" class="add-book-button">
                     <i class="fas fa-plus"></i>
                 </label>
+                <!-- O input de arquivo padrão é hidden via CSS, o label acima o aciona -->
                 <input type="file" id="pdf-upload" accept=".pdf,.txt,.docx,.pptx">
             </div>
 
             <div id="book-list" class="book-list">
                 <!-- Book cards will be injected here by JavaScript -->
-                <div id="no-books-message" class="col-span-full text-center text-gray-500 text-lg py-10 hidden">
+                <div id="no-books-message" class="col-span-full text-center text-gray-500 text-base py-10 hidden">
                     <p>Você ainda não tem livros na biblioteca. Clique no '+' para adicionar um!</p>
                 </div>
             </div>
@@ -377,6 +399,7 @@
         let lastRenderPromise = null; // To prevent concurrent PDF rendering
         let isDragging = false;
         let startX = 0;
+        let initialClientX = 0; // Store initial clientX for touch/mouse start
         const dragThreshold = 50; // Pixels to drag before considering a page turn
 
         // --- Utility Functions ---
@@ -662,7 +685,7 @@
                 textContentDisplay.textContent = atob(currentBook.base64Content); // Decode Base64 text
                 pdfDoc = null; // No PDF doc for text files
                 currentBook.currentPage = 1; // Text files usually treated as one long page or scrolled
-                pageInfo.textContent = 'Texto'; // No page numbers for text files
+                pageNumSpan.textContent = 'Texto'; // No page numbers for text files
                 // Disable controls for text files as scrolling handles pagination
                 prevPageBtn.disabled = true;
                 nextPageBtn.disabled = true;
@@ -670,6 +693,9 @@
                 // For unsupported types (DOCX, PPTX)
                 pdfCanvas.classList.remove('hidden'); // Show canvas as a placeholder for message
                 const ctx = pdfCanvas.getContext('2d');
+                // Ensure canvas is visible and cleared for the message
+                pdfCanvas.height = 300; // Set a default height for message display
+                pdfCanvas.width = pdfCanvas.clientWidth;
                 ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
                 ctx.font = '16px Inter';
                 ctx.fillStyle = '#6b7280';
@@ -677,7 +703,7 @@
                 ctx.fillText(`Conteúdo de "${currentBook.name}"`, pdfCanvas.width / 2, pdfCanvas.height / 2 - 20);
                 ctx.fillText(`não pode ser lido diretamente neste app.`, pdfCanvas.width / 2, pdfCanvas.height / 2);
                 pdfDoc = null;
-                pageInfo.textContent = 'Indisponível';
+                pageNumSpan.textContent = 'Indisponível';
                 prevPageBtn.disabled = true;
                 nextPageBtn.disabled = true;
                 showMessage(`Formato "${currentBook.type.split('/')[1]}" não suportado para leitura.`, true);
@@ -738,7 +764,8 @@
                 try {
                     showPageLoading();
                     const page = await pdfDoc.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: pdfCanvas.clientWidth / page.getViewport({ scale: 1 }).width }); // Fit to canvas width
+                    // Use actual canvas width to calculate scale for better fit on all devices
+                    const viewport = page.getViewport({ scale: pdfCanvas.clientWidth / page.getViewport({ scale: 1 }).width });
                     const context = pdfCanvas.getContext('2d');
 
                     // Set canvas dimensions to match the viewport
@@ -791,7 +818,12 @@
             const file = event.target.files[0];
             if (file) {
                 // Basic validation for allowed types
-                const allowedTypes = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'];
+                const allowedTypes = [
+                    'application/pdf',
+                    'text/plain',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+                    'application/vnd.openxmlformats-officedocument.presentationml.presentation' // .pptx
+                ];
                 if (allowedTypes.includes(file.type)) {
                     addBook(file);
                 } else {
@@ -826,37 +858,49 @@
         // --- Dragging for Page Turn (Arrastar para Virar Página) ---
 
         /**
-         * Inicia o arraste quando o mouse é pressionado no canvas.
+         * Obtém a coordenada X do evento (mouse ou toque).
+         * @param {Event} e - O objeto do evento.
+         * @returns {number} A coordenada X.
          */
-        pdfCanvas.addEventListener('mousedown', (e) => {
-            if (currentBook && !currentBook.type.includes('pdf')) return; // Only for PDFs
+        function getClientX(e) {
+            return e.touches ? e.touches[0].clientX : e.clientX;
+        }
+
+        /**
+         * Inicia o arraste (mouse ou toque).
+         * @param {Event} e - O objeto do evento.
+         */
+        function handleDragStart(e) {
+            if (currentBook && !currentBook.type.includes('pdf')) return; // Apenas para PDFs
             isDragging = true;
-            startX = e.clientX;
+            initialClientX = getClientX(e);
             pdfCanvas.style.cursor = 'grabbing';
             pdfCanvas.style.transition = 'none'; // Desabilita a transição durante o arraste
-        });
+        }
 
         /**
-         * Move o canvas enquanto arrasta para dar feedback visual.
+         * Move o canvas enquanto arrasta (mouse ou toque).
+         * @param {Event} e - O objeto do evento.
          */
-        pdfCanvas.addEventListener('mousemove', (e) => {
+        function handleDragMove(e) {
             if (!isDragging || !pdfDoc) return;
-            const dx = e.clientX - startX;
+            const dx = getClientX(e) - initialClientX;
             // Aplica uma leve translação horizontal para dar feedback durante o arraste
             pdfCanvas.style.transform = `translateX(${dx}px)`;
-        });
+        }
 
         /**
-         * Finaliza o arraste e decide se vira a página com base no deslocamento.
+         * Finaliza o arraste e decide se vira a página (mouse ou toque).
+         * @param {Event} e - O objeto do evento.
          */
-        pdfCanvas.addEventListener('mouseup', (e) => {
+        function handleDragEnd(e) {
             if (!isDragging || !pdfDoc) return;
             isDragging = false;
             pdfCanvas.style.cursor = 'grab';
             pdfCanvas.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out'; // Reabilita a transição
 
-            const endX = e.clientX;
-            const dx = endX - startX;
+            const endX = getClientX(e);
+            const dx = endX - initialClientX;
 
             if (Math.abs(dx) > dragThreshold) {
                 // Se arrastado significativamente
@@ -897,20 +941,30 @@
                 // Snap back if not enough drag
                 pdfCanvas.style.transform = `translateX(0)`;
             }
-        });
+        }
 
         /**
-         * Reseta o arraste se o mouse sair do canvas enquanto arrasta.
+         * Reseta o arraste se o mouse/toque sair do canvas enquanto arrasta.
          */
-        pdfCanvas.addEventListener('mouseleave', () => {
-            // Reset if mouse leaves while dragging (important for preventing stuck states)
+        function handleDragLeaveOrCancel() {
             if (isDragging) {
                 isDragging = false;
                 pdfCanvas.style.cursor = 'grab';
                 pdfCanvas.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
                 pdfCanvas.style.transform = `translateX(0)`;
             }
-        });
+        }
+
+        // --- Adiciona os listeners de eventos de mouse e toque ao canvas ---
+        pdfCanvas.addEventListener('mousedown', handleDragStart);
+        pdfCanvas.addEventListener('mousemove', handleDragMove);
+        pdfCanvas.addEventListener('mouseup', handleDragEnd);
+        pdfCanvas.addEventListener('mouseleave', handleDragLeaveOrCancel); // Para mouse leaving canvas
+
+        pdfCanvas.addEventListener('touchstart', handleDragStart);
+        pdfCanvas.addEventListener('touchmove', handleDragMove);
+        pdfCanvas.addEventListener('touchend', handleDragEnd);
+        pdfCanvas.addEventListener('touchcancel', handleDragLeaveOrCancel); // Para interrupções de toque
 
         // --- Initial Load ---
         window.onload = loadBooksFromLocalStorage;
