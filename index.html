@@ -57,12 +57,21 @@
         .prompt-input-style::placeholder {
             color: #a0aec0; /* Tailwind gray-500 */
         }
+        .prompt-input-style:disabled { /* Estilo para input desabilitado */
+            background-color: #3b4554; /* Um pouco mais escuro que o normal */
+            cursor: not-allowed;
+        }
         .submit-button-brasil {
             background-color: #ecc94b; /* Amarelo (Tailwind yellow-500) */
             color: #1a202c; /* Texto escuro para contraste com amarelo */
         }
         .submit-button-brasil:hover {
             background-color: #d69e2e; /* Amarelo mais escuro (Tailwind yellow-600) */
+        }
+        .submit-button-brasil:disabled { /* Estilo para botão desabilitado */
+            background-color: #b08c2a; /* Amarelo mais escuro e opaco */
+            color: #4a5568;
+            cursor: not-allowed;
         }
         .loading-spinner {
             border: 4px solid rgba(255, 255, 255, 0.1);
@@ -109,7 +118,6 @@
         <!-- Header -->
         <header class="header-brasil text-white p-4 rounded-t-lg flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                <!-- Ícone simples, pode ser personalizado com cores do Brasil se for SVG puro -->
                 <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
                 <path d="M2 17l10 5 10-5"></path>
                 <path d="M2 12l10 5 10-5"></path>
@@ -119,20 +127,16 @@
 
         <!-- Chat Output -->
         <div id="chat-output" class="flex-grow p-6 space-y-4 overflow-y-auto">
-            <!-- Mensagem inicial da IA (estilo amigo) -->
             <div class="chat-bubble ai-bubble">
                 e aí! blz? manda a braba aí, no q posso te ajudar kk
             </div>
-            <!-- As mensagens do chat serão adicionadas aqui -->
         </div>
 
-        <!-- Loading Indicator (initially hidden) -->
         <div id="loading-indicator" class="hidden p-4 flex items-center justify-center">
             <div class="loading-spinner mr-3"></div>
             <p class="loading-text-color">deixa eu ver aqui rapidinho...</p>
         </div>
 
-        <!-- Input Area -->
         <div class="input-area-bg p-4 border-t border-gray-700 rounded-b-lg">
             <div class="flex items-center space-x-3">
                 <textarea id="prompt-input" rows="2" class="prompt-input-style flex-grow p-3 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none outline-none" placeholder="lança a pergunta aí..."></textarea>
@@ -146,7 +150,6 @@
         </div>
     </div>
 
-    <!-- Error Modal (initially hidden) -->
     <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
         <div class="error-modal-bg p-6 rounded-lg shadow-xl max-w-sm w-full">
             <div class="flex justify-between items-center mb-4">
@@ -158,7 +161,6 @@
     </div>
 
     <script>
-        // Obter elementos do DOM
         const promptInput = document.getElementById('prompt-input');
         const submitButton = document.getElementById('submit-button');
         const chatOutput = document.getElementById('chat-output');
@@ -167,134 +169,214 @@
         const errorMessageElement = document.getElementById('error-message');
         const closeErrorModalButton = document.getElementById('close-error-modal');
 
-        // Armazenar histórico do chat (IA inicial com estilo amigo)
-        let chatHistory = [{ role: "model", parts: [{ text: "e aí! blz? manda a braba aí, no q posso te ajudar kk" }] }]; 
+        let chatHistory = [{ role: "model", parts: [{ text: "e aí! blz? manda a braba aí, no q posso te ajudar kk" }] }];
+        
+        let isAiCurrentlyResponding = false;
+        let currentAiResponseAbortController = null;
 
-        // Função para exibir uma mensagem FINAL no chat (usuário ou IA)
         function displayMessage(text, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('chat-bubble');
             if (sender === 'user') {
                 messageDiv.classList.add('user-bubble');
-                messageDiv.textContent = text; // Texto do usuário é setado diretamente
+                messageDiv.textContent = text;
             } else {
                 messageDiv.classList.add('ai-bubble');
-                messageDiv.textContent = text.toLowerCase(); // Converte texto da IA para minúsculas
+                messageDiv.textContent = text.toLowerCase();
             }
             chatOutput.appendChild(messageDiv);
-            chatOutput.scrollTop = chatOutput.scrollHeight; 
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+
+        function stoppableTimeout(delay, signal) {
+            return new Promise((resolve, reject) => {
+                if (signal.aborted) {
+                    reject(new DOMException('Aborted', 'AbortError'));
+                    return;
+                }
+                const timeoutId = setTimeout(resolve, delay);
+                signal.addEventListener('abort', () => {
+                    clearTimeout(timeoutId);
+                    reject(new DOMException('Aborted', 'AbortError'));
+                }, { once: true });
+            });
         }
         
-        // Função para simular digitação e exibir partes da resposta da IA sequencialmente
-        async function displayAiResponseSequentially(fullResponseText) {
-            // Substitui a string literal '\\n' por um caractere de nova linha '\n'
+        async function displayAiResponseSequentially(fullResponseText, cancellationSignal) {
             const processedResponseText = fullResponseText.replace(/\\n/g, '\n');
-            const responseParts = processedResponseText.split('\n').filter(part => part.trim() !== '');
+            let responseParts = processedResponseText.split('\n').filter(part => part.trim() !== '');
 
             if (responseParts.length === 0 && processedResponseText.trim() !== '') {
                 responseParts.push(processedResponseText.trim());
-            } else if (responseParts.length === 0) { 
+            } else if (responseParts.length === 0) {
                 return;
             }
+            
+            let typingBubble = null;
+            let typingInterval = null;
 
-            await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400)); 
+            try {
+                if (cancellationSignal.aborted) return;
+                await stoppableTimeout(600 + Math.random() * 400, cancellationSignal);
 
-            for (const part of responseParts) {
-                if (part.trim() === '') continue;
+                for (const part of responseParts) {
+                    if (cancellationSignal.aborted) throw new DOMException('Aborted by loop check', 'AbortError');
+                    if (part.trim() === '') continue;
 
-                const typingBubble = document.createElement('div');
-                typingBubble.classList.add('chat-bubble', 'ai-bubble', 'typing-indicator-bubble');
-                typingBubble.textContent = '.';
-                chatOutput.appendChild(typingBubble);
-                chatOutput.scrollTop = chatOutput.scrollHeight;
+                    typingBubble = document.createElement('div');
+                    typingBubble.classList.add('chat-bubble', 'ai-bubble', 'typing-indicator-bubble');
+                    typingBubble.textContent = '.';
+                    chatOutput.appendChild(typingBubble);
+                    chatOutput.scrollTop = chatOutput.scrollHeight;
 
-                let dots = 1;
-                const typingInterval = setInterval(() => {
-                    dots = (dots % 3) + 1;
-                    typingBubble.textContent = '.'.repeat(dots);
-                }, 350);
+                    let dots = 1;
+                    typingInterval = setInterval(() => {
+                        if (cancellationSignal.aborted) {
+                            clearInterval(typingInterval);
+                            return;
+                        }
+                        dots = (dots % 3) + 1;
+                        typingBubble.textContent = '.'.repeat(dots);
+                    }, 350);
+                    
+                    cancellationSignal.addEventListener('abort', () => clearInterval(typingInterval), { once: true });
 
-                const typingDelay = Math.max(500, Math.min(2500, part.length * 45 + Math.random() * 500));
-                await new Promise(resolve => setTimeout(resolve, typingDelay));
 
-                clearInterval(typingInterval);
-                if (typingBubble.parentNode === chatOutput) {
+                    if (cancellationSignal.aborted) throw new DOMException('Aborted before typing delay', 'AbortError');
+                    const typingDelay = Math.max(500, Math.min(2500, part.length * 45 + Math.random() * 500));
+                    await stoppableTimeout(typingDelay, cancellationSignal);
+
+                    clearInterval(typingInterval);
+                    typingInterval = null;
+                    if (typingBubble && typingBubble.parentNode === chatOutput) {
+                        chatOutput.removeChild(typingBubble);
+                        typingBubble = null;
+                    }
+                    
+                    if (cancellationSignal.aborted) throw new DOMException('Aborted before message display delay', 'AbortError');
+                    await stoppableTimeout(200 + Math.random() * 200, cancellationSignal);
+
+                    if (cancellationSignal.aborted) throw new DOMException('Aborted before displaying message', 'AbortError');
+                    displayMessage(part, 'ai');
+
+                    if (responseParts.indexOf(part) < responseParts.length - 1) {
+                        if (cancellationSignal.aborted) throw new DOMException('Aborted before next part delay', 'AbortError');
+                        await stoppableTimeout(500 + Math.random() * 500, cancellationSignal);
+                    }
+                }
+            } catch (error) {
+                if (typingInterval) clearInterval(typingInterval);
+                if (typingBubble && typingBubble.parentNode === chatOutput) {
                     chatOutput.removeChild(typingBubble);
                 }
-                
-                await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 200)); 
-
-                displayMessage(part, 'ai');
-
-                if (responseParts.indexOf(part) < responseParts.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500)); 
+                if (error.name === 'AbortError') {
+                    console.log("AI response display aborted.");
+                    return; 
                 }
+                console.error("Error in displayAiResponseSequentially:", error);
             }
         }
 
-
         function showLoading() {
             loadingIndicator.classList.remove('hidden');
-            submitButton.disabled = true;
-            promptInput.disabled = true;
+            // Botão e input já são desabilitados no início de handlePrompt
         }
 
         function hideLoading() {
             loadingIndicator.classList.add('hidden');
-            submitButton.disabled = false;
+            // Botão e input são reabilitados no finally de handlePrompt ou em erros específicos
+        }
+
+        function enableInput() {
             promptInput.disabled = false;
+            submitButton.disabled = false;
             promptInput.focus();
         }
+
+        function disableInput() {
+            promptInput.disabled = true;
+            submitButton.disabled = true;
+        }
+
 
         function showError(message) {
             errorMessageElement.textContent = message;
             errorModal.classList.remove('hidden');
         }
 
-        closeErrorModalButton.addEventListener('click', () => {
-            errorModal.classList.add('hidden');
-        });
+        closeErrorModalButton.addEventListener('click', () => errorModal.classList.add('hidden'));
         errorModal.addEventListener('click', (event) => {
-            if (event.target === errorModal) {
-                errorModal.classList.add('hidden');
-            }
+            if (event.target === errorModal) errorModal.classList.add('hidden');
         });
 
         submitButton.addEventListener('click', handlePrompt);
         promptInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); 
+                e.preventDefault();
                 handlePrompt();
             }
         });
 
         async function handlePrompt() {
+            // NOVO: Desabilita input e botão imediatamente
+            disableInput(); 
+
             const actualUserPrompt = promptInput.value.trim();
 
             if (!actualUserPrompt) {
                 showError("opa, esqueceu de digitar a pergunta kk");
+                enableInput(); // Reabilita se o prompt estiver vazio
                 return;
+            }
+
+            if (isAiCurrentlyResponding && currentAiResponseAbortController) {
+                console.log("Usuário interrompeu a IA.");
+                currentAiResponseAbortController.abort(); 
+
+                const existingTypingBubble = document.querySelector('.typing-indicator-bubble');
+                if (existingTypingBubble) {
+                    existingTypingBubble.remove();
+                }
+                
+                const reactions = [
+                    "po, me cortou no meio da frase kk",
+                    "calma aí, apressadinho(a)!",
+                    "eita, nem terminei de falar po...",
+                    "poxa, nem me deixou terminar :(",
+                    "tava quase lá...",
+                    "ah, vc me interrompeu...",
+                    "kkk opa, tava falando aqui",
+                    "quase me engasguei com as palavras kk",
+                    "segura a emoção aí, parça!"
+                ];
+                const reactionMessage = reactions[Math.floor(Math.random() * reactions.length)];
+                
+                // Não precisa de `await` aqui para a reação, ela é rápida
+                displayMessage(reactionMessage, 'ai'); 
+                chatHistory.push({ role: "model", parts: [{ text: reactionMessage }] });
+                
+                // Pequena pausa visual após a reação antes de seguir
+                await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); 
             }
 
             displayMessage(actualUserPrompt, 'user');
             chatHistory.push({ role: "user", parts: [{ text: actualUserPrompt }] });
+            promptInput.value = ''; // Limpa o campo APÓS a lógica de interrupção e exibição do prompt
+            
+            isAiCurrentlyResponding = true; 
+            currentAiResponseAbortController = new AbortController(); 
+            const signal = currentAiResponseAbortController.signal;
 
-            promptInput.value = ''; 
-            showLoading(); 
+            showLoading();
 
             try {
                 const systemInstruction = {
-                    role: "user", 
+                    role: "user",
                     parts: [{ text: "instrução de sistema: por favor, aja como um amigo super informal. use respostas curtas, gírias e 'kk'. se uma resposta tiver várias ideias curtas ou pausas naturais, separe-as com uma quebra de linha literal (o caractere \\n). isso fará com que apareçam como mensagens separadas na interface. mantenha tudo em minúsculas." }]
                 };
-                const apiPayloadContents = [ systemInstruction, ...chatHistory ];
-                
-                const payload = {
-                    contents: apiPayloadContents,
-                    generationConfig: { /* temperature: 0.7 */ }
-                };
-
-                const apiKey = ""; 
+                const apiPayloadContents = [systemInstruction, ...chatHistory];
+                const payload = { contents: apiPayloadContents, generationConfig: {} }; 
+                const apiKey = "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -303,39 +385,85 @@
                     body: JSON.stringify(payload)
                 });
                 
-                hideLoading(); 
+                hideLoading();
+
+                if (signal.aborted) { 
+                    console.log("Processamento da nova mensagem abortado antes da resposta da API ser exibida.");
+                    // O `finally` cuidará de reabilitar o input se necessário
+                    return;
+                }
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`erro da api: ${response.status} ${response.statusText}. ${errorData?.error?.message || 'sem muitos detalhes do erro, foi mal.'}`);
+                    let errorText = await response.text(); 
+                    let errorMessageFromServer = 'Detalhes não disponíveis do servidor.';
+                    if (errorText) {
+                        try {
+                            const errorData = JSON.parse(errorText); 
+                            errorMessageFromServer = errorData?.error?.message || errorText;
+                        } catch (e) {
+                            errorMessageFromServer = errorText; 
+                        }
+                    } else {
+                        errorMessageFromServer = 'Resposta de erro vazia do servidor.';
+                    }
+                    throw new Error(`erro da api: ${response.status} ${response.statusText}. ${errorMessageFromServer}`);
                 }
 
-                const result = await response.json();
+                const responseText = await response.text();
+                if (!responseText && !signal.aborted) {
+                    console.error('API success response was empty.');
+                    throw new Error("A IA respondeu com sucesso, mas não enviou nenhum conteúdo. Estranho kk");
+                }
+                if(signal.aborted) return; 
 
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    if (signal.aborted) return;
+                    console.error('Falha ao analisar JSON da resposta bem-sucedida da API:', e);
+                    console.error('Texto da Resposta Recebida:', responseText);
+                    throw new Error("A IA parece ter enviado uma resposta num formato esquisito. Não consegui entender, foi mal.");
+                }
+
+
+                if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
                     const aiResponseText = result.candidates[0].content.parts[0].text;
-                    chatHistory.push({ role: "model", parts: [{ text: aiResponseText }] }); 
-                    
-                    await displayAiResponseSequentially(aiResponseText);
-
+                    if (!signal.aborted) { 
+                        chatHistory.push({ role: "model", parts: [{ text: aiResponseText }] });
+                        await displayAiResponseSequentially(aiResponseText, signal);
+                    }
                 } else {
-                    console.error('Estrutura de resposta da API inesperada:', result);
-                    const errorMsg = "(não consegui processar a resposta da ia dessa vez, foi mal kk)";
-                    chatHistory.push({ role: "model", parts: [{text: errorMsg }]});
-                    await displayAiResponseSequentially(errorMsg); 
+                    if (!signal.aborted) { 
+                        console.error('Estrutura de resposta da API inesperada:', result);
+                        const errorMsg = "(não consegui processar a resposta da ia dessa vez, foi mal kk)";
+                        chatHistory.push({ role: "model", parts: [{ text: errorMsg }] });
+                        await displayAiResponseSequentially(errorMsg, signal);
+                    }
                 }
-
             } catch (error) {
-                if(!loadingIndicator.classList.contains('hidden')) hideLoading(); 
-                console.error('Erro ao buscar resposta da IA:', error);
-                const errorMsgForChat = `ixi, deu um erro aqui: ${error.message} kk`;
-                chatHistory.push({ role: "model", parts: [{text: errorMsgForChat}]});
-                await displayAiResponseSequentially(errorMsgForChat); 
-                showError(`foi mal, não consegui pegar a resposta. ${error.message}`);
-            } 
+                if (error.name !== 'AbortError') { 
+                    console.error('Erro ao buscar resposta da IA:', error);
+                    const errorMsgForChat = `ixi, deu um erro aqui: ${error.message} kk`;
+                    if (!signal.aborted) { 
+                         chatHistory.push({ role: "model", parts: [{ text: errorMsgForChat }] });
+                         await displayAiResponseSequentially(errorMsgForChat, signal); 
+                         showError(`foi mal, não consegui pegar a resposta. ${error.message}`);
+                    }
+                }
+            } finally {
+                isAiCurrentlyResponding = false;
+                currentAiResponseAbortController = null; 
+                if (!signal || !signal.aborted) { // Reabilita input apenas se não foi abortado (ou se o signal não existe)
+                    enableInput();
+                } else {
+                    // Se foi abortado por uma nova submissão, o novo handlePrompt cuidará de reabilitar quando apropriado.
+                    // No entanto, precisamos garantir que o input seja habilitado se um abort foi devido a uma interrupção,
+                    // mas não foi seguido por uma nova submissão imediata (cenário menos comum, mas possível).
+                    // Uma forma simples é reabilitar de qualquer forma, e o próximo handlePrompt desabilitará se iniciar.
+                    enableInput();
+                }
+            }
         }
     </script>
 
