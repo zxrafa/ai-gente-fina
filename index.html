@@ -3,972 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Leitor de Livros</title>
-    <!-- Tailwind CSS CDN -->
+    <title>IA Gente Fina</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 10px; /* Reduced padding for smaller screens */
-            box-sizing: border-box;
-            overflow-x: hidden; /* Prevent horizontal scroll */
+            /* Tema Escuro Brasil - Fundo Principal */
+            background-color: #1a202c; /* Cinza bem escuro (Tailwind gray-900) */
         }
-
-        .main-app-container {
-            background-color: #ffffff;
-            border-radius: 1.5rem; /* Increased border radius for modern look */
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Stronger shadow */
-            padding: 1rem; /* Adjusted padding for mobile */
-            max-width: 98%; /* Responsive max-width */
-            width: 100%;
-            min-height: 85vh; /* Minimum height for better layout */
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden; /* Hide overflow during view transitions */
+        .chat-container {
+             /* Cinza um pouco mais claro para o container do chat */
+            background-color: #2d3748; /* Tailwind gray-800 */
         }
-
-        /* --- Library View Styles --- */
-        #library-view {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
+        .header-brasil {
+            /* Gradiente verde e amarelo para o cabeçalho */
+            background-image: linear-gradient(to right, #22543d, #ddb337); /* Verde escuro e Amarelo queimado */
         }
-
-        .library-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem; /* Adjusted margin */
-            padding: 0 0.25rem; /* Adjusted padding for mobile */
+        .chat-bubble {
+            max-width: 75%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            line-height: 1.5;
         }
-
-        .add-book-button {
-            background-color: #4f46e5; /* Indigo */
-            color: white;
-            border-radius: 9999px; /* Fully rounded */
-            width: 50px;
-            height: 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            user-select: none; /* Prevent text selection */
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
+        .user-bubble {
+            /* Verde para o balão do usuário */
+            background-color: #2f855a; /* Tailwind green-700 */
+            color: #f0fff4; /* Verde bem clarinho, quase branco */
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
         }
-
-        .add-book-button:hover {
-            background-color: #4338ca;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.15);
+        .ai-bubble {
+            /* Cinza escuro para o balão da IA */
+            background-color: #4a5568; /* Tailwind gray-700 */
+            color: #e2e8f0; /* Cinza bem claro (Tailwind slate-200) */
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
         }
-
-        .add-book-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        .typing-indicator-bubble {
+            background-color: #4a5568; /* Tailwind gray-700 */
+            color: #a0aec0; /* Tailwind gray-500 para os pontinhos */
         }
-
-        /* Force hide the actual file input to avoid "Escolher arquivo" button */
-        input[type="file"] {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-            appearance: none; /* For Webkit browsers */
-            -webkit-appearance: none;
+        .input-area-bg {
+            background-color: #2c3642; /* Um tom entre gray-800 e gray-900 */
         }
-
-        .book-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* More responsive grid for smaller screens */
-            gap: 0.75rem; /* Smaller gap for mobile */
-            flex-grow: 1;
-            overflow-y: auto; /* Scroll for books */
-            padding-right: 5px; /* Prevent scrollbar from overlapping content */
+        .prompt-input-style {
+            background-color: #4a5568; /* Tailwind gray-700 */
+            color: #e2e8f0; /* Texto claro */
+            border-color: #ecc94b; /* Borda amarela (Tailwind yellow-500) */
         }
-
-        .book-card {
-            background-color: #f9fafb;
-            border-radius: 0.75rem; /* Rounded borders for cards */
-            padding: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+        .prompt-input-style::placeholder {
+            color: #a0aec0; /* Tailwind gray-500 */
         }
-
-        .book-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        .submit-button-brasil {
+            background-color: #ecc94b; /* Amarelo (Tailwind yellow-500) */
+            color: #1a202c; /* Texto escuro para contraste com amarelo */
         }
-
-        .book-card-cover {
-            width: 80px; /* Adjusted fixed width for covers for smaller screens */
-            height: 112px; /* Adjusted fixed height for covers (aspect ratio for books) */
-            object-fit: cover;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            border: 1px solid #e5e7eb; /* Light border */
+        .submit-button-brasil:hover {
+            background-color: #d69e2e; /* Amarelo mais escuro (Tailwind yellow-600) */
         }
-
-        .book-card-title {
-            font-size: 0.75rem; /* Smaller text for mobile */
-            font-weight: 500;
-            color: #374151;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap; /* Prevent title wrapping */
-            width: 100%;
-            padding: 0 0.25rem;
-        }
-
-        /* --- Reader View Styles --- */
-        #reader-view {
-            display: none; /* Hidden by default */
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
-            gap: 0.75rem; /* Smaller gap */
-            position: absolute; /* Allow transition from library */
-            top: 0;
-            left: 0;
-            background-color: #ffffff;
-            border-radius: 1.5rem;
-            transition: transform 0.4s ease-out, opacity 0.4s ease-out;
-            transform: translateX(100%); /* Start off-screen right */
-            padding: 1rem; /* Consistent padding with container */
-        }
-
-        #reader-view.active {
-            display: flex;
-            transform: translateX(0%); /* Slide in */
-        }
-
-        .reader-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem; /* Smaller gap */
-            padding: 0 0.25rem; /* Adjusted padding */
-        }
-
-        .back-button {
-            background-color: #6b7280; /* Gray */
-            color: white;
-            border-radius: 0.5rem;
-            padding: 0.4rem 0.8rem; /* Smaller padding */
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .back-button:hover { background-color: #4b5563; }
-
-        .current-book-title {
-            font-size: 1.1rem; /* Slightly smaller for mobile header */
-            font-weight: 600;
-            color: #1f2937;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex-grow: 1;
-        }
-
-        #pdf-canvas, #text-content-display {
-            display: block;
-            width: 100%;
-            height: auto;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            background-color: #f9fafb; /* Light background for canvas */
-            cursor: grab; /* Indicate draggable */
-            transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Smooth transition for page turns */
-            user-select: none; /* Prevent text selection during drag */
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            flex-grow: 1; /* Allow content to grow */
-        }
-
-        #text-content-display {
-            padding: 1rem;
-            white-space: pre-wrap; /* Preserve whitespace and wrap text */
-            overflow-y: auto; /* Enable scrolling for text content */
-            font-size: 0.9rem; /* Smaller font for text content */
-            line-height: 1.5; /* Adjusted line height */
-            color: #374151;
-            min-height: 250px; /* Adjusted minimum height for text content */
-            resize: vertical; /* Allow manual resizing of text area */
-        }
-
-        .page-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem; /* Smaller gap */
-            margin-top: 0.75rem; /* Adjusted margin */
-            padding-bottom: 0.5rem; /* Add padding for mobile bottom */
-        }
-
-        .page-control-button {
-            padding: 0.5rem 1rem; /* Smaller padding for mobile */
-            background-color: #4f46e5; /* Indigo */
-            color: white;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        .page-control-button:hover {
-            background-color: #4338ca; /* Darker indigo */
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.15);
-        }
-
-        .page-control-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        /* --- Loading and Messages --- */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.9); /* More opaque */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 1.5rem;
-            z-index: 10;
-            font-size: 1.1rem; /* Slightly smaller font */
-            font-weight: 600;
-            color: #4f46e5;
-            flex-direction: column;
-            gap: 0.75rem; /* Smaller gap */
-        }
-
-        /* Basic spinner */
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #4f46e5;
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #ecc94b; /* Amarelo para o spinner */
             border-radius: 50%;
-            width: 35px; /* Smaller spinner */
-            height: 35px;
+            width: 24px;
+            height: 24px;
             animation: spin 1s linear infinite;
         }
-
+        .loading-text-color {
+            color: #cbd5e0; /* Texto cinza claro para "pensando" */
+        }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        .message-box {
-            position: fixed;
-            top: 15px; /* Adjusted position */
-            right: 15px; /* Adjusted position */
-            background-color: #10b981; /* Green for success */
-            color: white;
-            padding: 12px 18px; /* Adjusted padding */
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-            z-index: 1000;
-            max-width: 90%; /* Responsive width */
-            text-align: center;
-            font-size: 0.9rem; /* Smaller font size */
+        /* Scrollbar styling para tema escuro */
+        #chat-output::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-output::-webkit-scrollbar-track {
+            background: #2d3748; /* Fundo da trilha do scroll (cor do container) */
+            border-radius: 10px;
+        }
+        #chat-output::-webkit-scrollbar-thumb {
+            background: #4a5568; /* Cor da barra de scroll (Tailwind gray-700) */
+            border-radius: 10px;
+        }
+        #chat-output::-webkit-scrollbar-thumb:hover {
+            background: #718096; /* Cor da barra ao passar o mouse (Tailwind gray-600) */
+        }
+        .error-modal-bg {
+            background-color: #2d3748; /* Fundo do modal de erro */
+            color: #e2e8f0; /* Texto claro no modal */
+        }
+        .error-modal-title {
+            color: #f56565; /* Vermelho para o título do erro (Tailwind red-500) */
         }
 
-        .message-box.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .message-box.error {
-            background-color: #ef4444; /* Red for error */
-        }
     </style>
 </head>
-<body class="relative">
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="main-app-container">
-        <!-- Loading Overlay (hidden by default) -->
-        <div id="app-loading-overlay" class="loading-overlay hidden">
-            <div class="spinner"></div>
-            <p>Carregando...</p>
+    <div class="w-full max-w-2xl chat-container shadow-xl rounded-lg flex flex-col h-[85vh]">
+        <!-- Header -->
+        <header class="header-brasil text-white p-4 rounded-t-lg flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                <!-- Ícone simples, pode ser personalizado com cores do Brasil se for SVG puro -->
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+            </svg>
+            <h1 class="text-xl font-semibold">IA Gente Fina</h1>
+        </header>
+
+        <!-- Chat Output -->
+        <div id="chat-output" class="flex-grow p-6 space-y-4 overflow-y-auto">
+            <!-- Mensagem inicial da IA (estilo amigo) -->
+            <div class="chat-bubble ai-bubble">
+                e aí! blz? manda a braba aí, no q posso te ajudar kk
+            </div>
+            <!-- As mensagens do chat serão adicionadas aqui -->
         </div>
 
-        <!-- Library View -->
-        <div id="library-view">
-            <div class="library-header">
-                <h1 class="text-3xl font-bold text-gray-800">Minha Biblioteca</h1>
-                <label for="pdf-upload" class="add-book-button">
-                    <i class="fas fa-plus"></i>
-                </label>
-                <!-- O input de arquivo padrão é hidden via CSS, o label acima o aciona -->
-                <input type="file" id="pdf-upload" accept=".pdf,.txt,.docx,.pptx">
-            </div>
-
-            <div id="book-list" class="book-list">
-                <!-- Book cards will be injected here by JavaScript -->
-                <div id="no-books-message" class="col-span-full text-center text-gray-500 text-base py-10 hidden">
-                    <p>Você ainda não tem livros na biblioteca. Clique no '+' para adicionar um!</p>
-                </div>
-            </div>
+        <!-- Loading Indicator (initially hidden) -->
+        <div id="loading-indicator" class="hidden p-4 flex items-center justify-center">
+            <div class="loading-spinner mr-3"></div>
+            <p class="loading-text-color">deixa eu ver aqui rapidinho...</p>
         </div>
 
-        <!-- Reader View -->
-        <div id="reader-view">
-            <div class="reader-header">
-                <button id="back-to-library-btn" class="back-button"><i class="fas fa-arrow-left"></i> Voltar</button>
-                <h2 id="current-book-title" class="current-book-title"></h2>
-            </div>
-
-            <div class="relative flex flex-col items-center justify-center flex-grow">
-                <div id="page-loading-spinner" class="loading-overlay hidden">
-                    <div class="spinner"></div>
-                    <p>Carregando página...</p>
-                </div>
-                <canvas id="pdf-canvas" class="w-full h-auto flex-grow"></canvas>
-                <pre id="text-content-display" class="w-full h-auto hidden flex-grow"></pre>
-            </div>
-
-            <div class="page-controls">
-                <button id="prev-page" class="page-control-button">Página Anterior</button>
-                <span id="page-info" class="text-xl font-semibold text-gray-700"></span>
-                <button id="next-page" class="page-control-button">Próxima Página</button>
+        <!-- Input Area -->
+        <div class="input-area-bg p-4 border-t border-gray-700 rounded-b-lg">
+            <div class="flex items-center space-x-3">
+                <textarea id="prompt-input" rows="2" class="prompt-input-style flex-grow p-3 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none outline-none" placeholder="lança a pergunta aí..."></textarea>
+                <button id="submit-button" class="submit-button-brasil font-semibold py-3 px-6 rounded-lg transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="message-box" class="message-box"></div>
+    <!-- Error Modal (initially hidden) -->
+    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="error-modal-bg p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold error-modal-title">ops, deu ruim kk</h3>
+                <button id="close-error-modal" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+            </div>
+            <p id="error-message" class="text-gray-300"></p>
+        </div>
+    </div>
 
-    <!-- PDF.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        // Obter elementos do DOM
+        const promptInput = document.getElementById('prompt-input');
+        const submitButton = document.getElementById('submit-button');
+        const chatOutput = document.getElementById('chat-output');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const errorModal = document.getElementById('error-modal');
+        const errorMessageElement = document.getElementById('error-message');
+        const closeErrorModalButton = document.getElementById('close-error-modal');
 
-        // --- DOM Elements ---
-        const mainAppContainer = document.querySelector('.main-app-container');
-        const libraryView = document.getElementById('library-view');
-        const readerView = document.getElementById('reader-view');
-        const pdfUpload = document.getElementById('pdf-upload');
-        const bookListContainer = document.getElementById('book-list');
-        const noBooksMessage = document.getElementById('no-books-message');
-        const backToLibraryBtn = document.getElementById('back-to-library-btn');
-        const currentBookTitleDisplay = document.getElementById('current-book-title');
-        const pdfCanvas = document.getElementById('pdf-canvas');
-        const textContentDisplay = document.getElementById('text-content-display');
-        const pageNumSpan = document.getElementById('page-info');
-        const prevPageBtn = document.getElementById('prev-page');
-        const nextPageBtn = document.getElementById('next-page');
-        const appLoadingOverlay = document.getElementById('app-loading-overlay');
-        const pageLoadingSpinner = document.getElementById('page-loading-spinner');
-        const messageBox = document.getElementById('message-box');
+        // Armazenar histórico do chat (IA inicial com estilo amigo)
+        let chatHistory = [{ role: "model", parts: [{ text: "e aí! blz? manda a braba aí, no q posso te ajudar kk" }] }]; 
 
-        // --- Global State ---
-        let books = []; // Array to store all books
-        let currentBook = null; // The book currently being read
-        let pdfDoc = null; // PDF.js document object
-        let lastRenderPromise = null; // To prevent concurrent PDF rendering
-        let isDragging = false;
-        let startX = 0;
-        let initialClientX = 0; // Store initial clientX for touch/mouse start
-        const dragThreshold = 50; // Pixels to drag before considering a page turn
-
-        // --- Utility Functions ---
-
-        /**
-         * Exibe uma mensagem flutuante para o usuário.
-         * @param {string} message - A mensagem a ser exibida.
-         * @param {boolean} isError - Se a mensagem é um erro, muda a cor de fundo.
-         */
-        function showMessage(message, isError = false) {
-            messageBox.textContent = message;
-            if (isError) {
-                messageBox.classList.add('error');
+        // Função para exibir uma mensagem FINAL no chat (usuário ou IA)
+        function displayMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chat-bubble');
+            if (sender === 'user') {
+                messageDiv.classList.add('user-bubble');
+                messageDiv.textContent = text; // Texto do usuário é setado diretamente
             } else {
-                messageBox.classList.remove('error');
+                messageDiv.classList.add('ai-bubble');
+                messageDiv.textContent = text.toLowerCase(); // Converte texto da IA para minúsculas
             }
-            messageBox.classList.add('show');
-            setTimeout(() => {
-                messageBox.classList.remove('show');
-            }, 3000);
+            chatOutput.appendChild(messageDiv);
+            chatOutput.scrollTop = chatOutput.scrollHeight; 
         }
+        
+        // Função para simular digitação e exibir partes da resposta da IA sequencialmente
+        async function displayAiResponseSequentially(fullResponseText) {
+            // Substitui a string literal '\\n' por um caractere de nova linha '\n'
+            const processedResponseText = fullResponseText.replace(/\\n/g, '\n');
+            const responseParts = processedResponseText.split('\n').filter(part => part.trim() !== '');
 
-        /**
-         * Gera um UUID (Universally Unique Identifier) para IDs de livros.
-         * @returns {string} Um UUID versão 4.
-         */
-        function generateUUID() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0,
-                    v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
+            if (responseParts.length === 0 && processedResponseText.trim() !== '') {
+                responseParts.push(processedResponseText.trim());
+            } else if (responseParts.length === 0) { 
+                return;
+            }
 
-        /**
-         * Mostra um overlay de carregamento em tela cheia.
-         */
-        function showAppLoading() {
-            appLoadingOverlay.classList.remove('hidden');
-        }
+            await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400)); 
 
-        /**
-         * Esconde o overlay de carregamento em tela cheia.
-         */
-        function hideAppLoading() {
-            appLoadingOverlay.classList.add('hidden');
-        }
+            for (const part of responseParts) {
+                if (part.trim() === '') continue;
 
-        /**
-         * Mostra o spinner de carregamento da página no reader view.
-         */
-        function showPageLoading() {
-            pageLoadingSpinner.classList.remove('hidden');
-            pdfCanvas.classList.add('hidden');
-            textContentDisplay.classList.add('hidden');
-            prevPageBtn.disabled = true;
-            nextPageBtn.disabled = true;
-        }
+                const typingBubble = document.createElement('div');
+                typingBubble.classList.add('chat-bubble', 'ai-bubble', 'typing-indicator-bubble');
+                typingBubble.textContent = '.';
+                chatOutput.appendChild(typingBubble);
+                chatOutput.scrollTop = chatOutput.scrollHeight;
 
-        /**
-         * Esconde o spinner de carregamento da página.
-         */
-        function hidePageLoading() {
-            pageLoadingSpinner.classList.add('hidden');
-            prevPageBtn.disabled = false;
-            nextPageBtn.disabled = false;
-        }
+                let dots = 1;
+                const typingInterval = setInterval(() => {
+                    dots = (dots % 3) + 1;
+                    typingBubble.textContent = '.'.repeat(dots);
+                }, 350);
 
-        /**
-         * Salva o array de livros no Local Storage.
-         */
-        function saveBooksToLocalStorage() {
-            try {
-                localStorage.setItem('books', JSON.stringify(books));
-            } catch (e) {
-                console.error("Erro ao salvar livros no Local Storage:", e);
-                if (e.name === 'QuotaExceededError') {
-                    showMessage('Erro: Armazenamento local cheio. Limpe alguns livros ou tente um arquivo menor.', true);
-                } else {
-                    showMessage('Erro ao salvar o livro no armazenamento local.', true);
+                const typingDelay = Math.max(500, Math.min(2500, part.length * 45 + Math.random() * 500));
+                await new Promise(resolve => setTimeout(resolve, typingDelay));
+
+                clearInterval(typingInterval);
+                if (typingBubble.parentNode === chatOutput) {
+                    chatOutput.removeChild(typingBubble);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 200)); 
+
+                displayMessage(part, 'ai');
+
+                if (responseParts.indexOf(part) < responseParts.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500)); 
                 }
             }
         }
 
-        /**
-         * Carrega o array de livros do Local Storage.
-         */
-        function loadBooksFromLocalStorage() {
-            const storedBooks = localStorage.getItem('books');
-            if (storedBooks) {
-                books = JSON.parse(storedBooks);
-            } else {
-                books = [];
-            }
-            renderLibrary();
+
+        function showLoading() {
+            loadingIndicator.classList.remove('hidden');
+            submitButton.disabled = true;
+            promptInput.disabled = true;
         }
 
-        /**
-         * Renderiza a biblioteca de livros.
-         */
-        function renderLibrary() {
-            bookListContainer.innerHTML = ''; // Clear existing books
-            if (books.length === 0) {
-                noBooksMessage.classList.remove('hidden');
-            } else {
-                noBooksMessage.classList.add('hidden');
-                books.forEach(book => {
-                    const bookCard = document.createElement('div');
-                    bookCard.className = 'book-card';
-                    bookCard.dataset.bookId = book.id;
-                    bookCard.onclick = () => loadBook(book.id);
+        function hideLoading() {
+            loadingIndicator.classList.add('hidden');
+            submitButton.disabled = false;
+            promptInput.disabled = false;
+            promptInput.focus();
+        }
 
-                    const img = document.createElement('img');
-                    img.className = 'book-card-cover';
-                    // Use a placeholder image for unsupported types or if cover generation failed
-                    img.src = book.cover || getGenericCover(book.type);
-                    img.alt = `Capa do livro ${book.name}`;
-                    img.onerror = () => img.src = getGenericCover(book.type); // Fallback if cover image fails
+        function showError(message) {
+            errorMessageElement.textContent = message;
+            errorModal.classList.remove('hidden');
+        }
 
-                    const title = document.createElement('p');
-                    title.className = 'book-card-title';
-                    title.textContent = book.name.split('.').slice(0, -1).join('.'); // Remove extension from display name
+        closeErrorModalButton.addEventListener('click', () => {
+            errorModal.classList.add('hidden');
+        });
+        errorModal.addEventListener('click', (event) => {
+            if (event.target === errorModal) {
+                errorModal.classList.add('hidden');
+            }
+        });
 
-                    bookCard.appendChild(img);
-                    bookCard.appendChild(title);
-                    bookListContainer.appendChild(bookCard);
+        submitButton.addEventListener('click', handlePrompt);
+        promptInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); 
+                handlePrompt();
+            }
+        });
+
+        async function handlePrompt() {
+            const actualUserPrompt = promptInput.value.trim();
+
+            if (!actualUserPrompt) {
+                showError("opa, esqueceu de digitar a pergunta kk");
+                return;
+            }
+
+            displayMessage(actualUserPrompt, 'user');
+            chatHistory.push({ role: "user", parts: [{ text: actualUserPrompt }] });
+
+            promptInput.value = ''; 
+            showLoading(); 
+
+            try {
+                const systemInstruction = {
+                    role: "user", 
+                    parts: [{ text: "instrução de sistema: por favor, aja como um amigo super informal. use respostas curtas, gírias e 'kk'. se uma resposta tiver várias ideias curtas ou pausas naturais, separe-as com uma quebra de linha literal (o caractere \\n). isso fará com que apareçam como mensagens separadas na interface. mantenha tudo em minúsculas." }]
+                };
+                const apiPayloadContents = [ systemInstruction, ...chatHistory ];
+                
+                const payload = {
+                    contents: apiPayloadContents,
+                    generationConfig: { /* temperature: 0.7 */ }
+                };
+
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
-            }
-        }
+                
+                hideLoading(); 
 
-        /**
-         * Retorna uma URL de dados para uma capa genérica baseada no tipo de arquivo.
-         * @param {string} fileType - O tipo MIME do arquivo.
-         * @returns {string} URL de dados da imagem ou ícone SVG.
-         */
-        function getGenericCover(fileType) {
-            let iconCode = '';
-            let bgColor = '#cbd5e1'; // Default gray
-
-            if (fileType.includes('pdf')) {
-                iconCode = `<i class="fas fa-file-pdf text-red-500 text-6xl"></i>`;
-                bgColor = '#fee2e2'; // Light red
-            } else if (fileType.includes('text')) {
-                iconCode = `<i class="fas fa-file-alt text-blue-500 text-6xl"></i>`;
-                bgColor = '#e0f2fe'; // Light blue
-            } else if (fileType.includes('document')) { // docx
-                iconCode = `<i class="fas fa-file-word text-blue-700 text-6xl"></i>`;
-                bgColor = '#dbeafe'; // Lighter blue
-            } else if (fileType.includes('presentation')) { // pptx
-                iconCode = `<i class="fas fa-file-powerpoint text-orange-600 text-6xl"></i>`;
-                bgColor = '#fff7ed'; // Light orange
-            } else {
-                iconCode = `<i class="fas fa-file text-gray-500 text-6xl"></i>`;
-            }
-
-            // Create a simple SVG icon as a data URL for covers
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="140" viewBox="0 0 100 140" fill="${bgColor}" class="rounded-lg">
-                <rect width="100" height="140" fill="${bgColor}" rx="10"/>
-                <foreignObject x="0" y="0" width="100" height="140">
-                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
-                        ${iconCode}
-                    </div>
-                </foreignObject>
-            </svg>`;
-            return `data:image/svg+xml;base64,${btoa(svg)}`;
-        }
-
-
-        /**
-         * Gera uma miniatura da primeira página de um PDF para a capa.
-         * @param {string} base64Pdf - O conteúdo do PDF em Base64.
-         * @returns {Promise<string|null>} URL de dados da miniatura ou null em caso de erro.
-         */
-        async function createPdfCoverThumbnail(base64Pdf) {
-            try {
-                const pdfData = atob(base64Pdf);
-                const pdfBytes = new Uint8Array(pdfData.length);
-                for (let i = 0; i < pdfData.length; i++) {
-                    pdfBytes[i] = pdfData.charCodeAt(i);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`erro da api: ${response.status} ${response.statusText}. ${errorData?.error?.message || 'sem muitos detalhes do erro, foi mal.'}`);
                 }
 
-                const tempPdfDoc = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
-                const firstPage = await tempPdfDoc.getPage(1);
-                const viewport = firstPage.getViewport({ scale: 0.5 }); // Smaller scale for thumbnail
+                const result = await response.json();
 
-                const thumbnailCanvas = document.createElement('canvas');
-                const thumbnailContext = thumbnailCanvas.getContext('2d');
-                thumbnailCanvas.height = viewport.height;
-                thumbnailCanvas.width = viewport.width;
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    
+                    const aiResponseText = result.candidates[0].content.parts[0].text;
+                    chatHistory.push({ role: "model", parts: [{ text: aiResponseText }] }); 
+                    
+                    await displayAiResponseSequentially(aiResponseText);
 
-                const renderContext = {
-                    canvasContext: thumbnailContext,
-                    viewport: viewport,
-                };
-                await firstPage.render(renderContext).promise;
-                return thumbnailCanvas.toDataURL('image/png');
-            } catch (error) {
-                console.error('Erro ao gerar capa do PDF:', error);
-                return null; // Return null if thumbnail generation fails
-            }
-        }
-
-        /**
-         * Adiciona um novo livro à biblioteca.
-         * @param {File} file - O objeto File do livro.
-         */
-        async function addBook(file) {
-            showAppLoading();
-            try {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const dataURL = e.target.result;
-                    const base64Content = dataURL.split(',')[1];
-                    const bookType = file.type;
-                    let bookCover = null;
-
-                    if (bookType.includes('pdf')) {
-                        bookCover = await createPdfCoverThumbnail(base64Content);
-                    } else {
-                        bookCover = getGenericCover(bookType); // Use generic icon for other types
-                    }
-
-                    const newBook = {
-                        id: generateUUID(),
-                        name: file.name,
-                        type: bookType,
-                        base64Content: base64Content,
-                        currentPage: 1, // Start at page 1 for new books
-                        cover: bookCover // Store the generated/generic cover
-                    };
-
-                    books.push(newBook);
-                    saveBooksToLocalStorage();
-                    renderLibrary();
-                    hideAppLoading();
-                    showMessage(`"${file.name}" adicionado à biblioteca!`);
-                };
-
-                // Read file as Data URL to get Base64 content
-                reader.readAsDataURL(file);
-
-            } catch (error) {
-                console.error("Erro ao adicionar livro:", error);
-                hideAppLoading();
-                showMessage('Erro ao adicionar o livro. Tente novamente.', true);
-            }
-        }
-
-        /**
-         * Carrega um livro específico na tela do leitor.
-         * @param {string} bookId - O ID do livro a ser carregado.
-         */
-        async function loadBook(bookId) {
-            currentBook = books.find(b => b.id === bookId);
-            if (!currentBook) {
-                showMessage('Livro não encontrado.', true);
-                return;
-            }
-
-            // Show reader view and hide library view
-            libraryView.style.display = 'none';
-            readerView.style.display = 'flex'; // Set display to flex before transition
-            // Trigger transition by adding class after display update
-            requestAnimationFrame(() => {
-                readerView.classList.add('active');
-            });
-
-
-            currentBookTitleDisplay.textContent = currentBook.name;
-            pdfCanvas.classList.add('hidden'); // Hide canvas by default
-            textContentDisplay.classList.add('hidden'); // Hide text display by default
-
-            if (currentBook.type.includes('pdf')) {
-                pdfCanvas.classList.remove('hidden');
-                pdfDoc = null; // Reset PDF doc for new book
-                currentBook.currentPage = currentBook.currentPage || 1; // Ensure current page exists
-                await renderPdf(currentBook.base64Content, currentBook.currentPage);
-                // Enable controls for PDF
-                prevPageBtn.disabled = false;
-                nextPageBtn.disabled = false;
-            } else if (currentBook.type.includes('text')) {
-                textContentDisplay.classList.remove('hidden');
-                textContentDisplay.textContent = atob(currentBook.base64Content); // Decode Base64 text
-                pdfDoc = null; // No PDF doc for text files
-                currentBook.currentPage = 1; // Text files usually treated as one long page or scrolled
-                pageNumSpan.textContent = 'Texto'; // No page numbers for text files
-                // Disable controls for text files as scrolling handles pagination
-                prevPageBtn.disabled = true;
-                nextPageBtn.disabled = true;
-            } else {
-                // For unsupported types (DOCX, PPTX)
-                pdfCanvas.classList.remove('hidden'); // Show canvas as a placeholder for message
-                const ctx = pdfCanvas.getContext('2d');
-                // Ensure canvas is visible and cleared for the message
-                pdfCanvas.height = 300; // Set a default height for message display
-                pdfCanvas.width = pdfCanvas.clientWidth;
-                ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
-                ctx.font = '16px Inter';
-                ctx.fillStyle = '#6b7280';
-                ctx.textAlign = 'center';
-                ctx.fillText(`Conteúdo de "${currentBook.name}"`, pdfCanvas.width / 2, pdfCanvas.height / 2 - 20);
-                ctx.fillText(`não pode ser lido diretamente neste app.`, pdfCanvas.width / 2, pdfCanvas.height / 2);
-                pdfDoc = null;
-                pageNumSpan.textContent = 'Indisponível';
-                prevPageBtn.disabled = true;
-                nextPageBtn.disabled = true;
-                showMessage(`Formato "${currentBook.type.split('/')[1]}" não suportado para leitura.`, true);
-            }
-            saveBooksToLocalStorage(); // Save updated current page/status
-        }
-
-
-        /**
-         * Renderiza um documento PDF no canvas.
-         * @param {string} base64Pdf - O conteúdo Base64 do PDF.
-         * @param {number} pageNum - A página a ser renderizada inicialmente.
-         */
-        async function renderPdf(base64Pdf, pageNum) {
-            showPageLoading();
-            try {
-                const pdfData = atob(base64Pdf);
-                const pdfBytes = new Uint8Array(pdfData.length);
-                for (let i = 0; i < pdfData.length; i++) {
-                    pdfBytes[i] = pdfData.charCodeAt(i);
-                }
-                pdfDoc = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
-                // Set current page to loaded page, or 1 if invalid
-                currentBook.currentPage = Math.max(1, Math.min(pageNum, pdfDoc.numPages));
-                await renderPage(currentBook.currentPage);
-                hidePageLoading();
-            } catch (error) {
-                console.error('Erro ao carregar o PDF:', error);
-                showMessage('Erro ao carregar o PDF. Por favor, tente um arquivo válido.', true);
-                pdfDoc = null;
-                hidePageLoading();
-                // Go back to library on critical error
-                backToLibrary();
-            }
-        }
-
-        /**
-         * Renderiza uma página específica do PDF no canvas.
-         * @param {number} pageNum - O número da página a ser renderizada.
-         */
-        async function renderPage(pageNum) {
-            if (!pdfDoc) {
-                showMessage('Nenhum documento PDF carregado.', true);
-                return;
-            }
-            if (pageNum < 1 || pageNum > pdfDoc.numPages) {
-                return; // Page number out of bounds, do nothing
-            }
-
-            // Ensure only one rendering operation is active at a time
-            if (lastRenderPromise) {
-                try {
-                    await lastRenderPromise;
-                } catch (e) { /* Ignore errors from previous renders if they were aborted/failed */ }
-            }
-
-            const renderPromise = new Promise(async (resolve, reject) => {
-                try {
-                    showPageLoading();
-                    const page = await pdfDoc.getPage(pageNum);
-                    // Use actual canvas width to calculate scale for better fit on all devices
-                    const viewport = page.getViewport({ scale: pdfCanvas.clientWidth / page.getViewport({ scale: 1 }).width });
-                    const context = pdfCanvas.getContext('2d');
-
-                    // Set canvas dimensions to match the viewport
-                    pdfCanvas.height = viewport.height;
-                    pdfCanvas.width = viewport.width;
-
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: viewport,
-                    };
-
-                    await page.render(renderContext).promise;
-                    currentBook.currentPage = pageNum;
-                    pageNumSpan.textContent = `${currentBook.currentPage} / ${pdfDoc.numPages}`;
-                    saveBooksToLocalStorage(); // Save current page for this book
-                    hidePageLoading();
-                    resolve();
-                } catch (error) {
-                    console.error('Erro ao renderizar a página:', error);
-                    showMessage('Erro ao renderizar a página.', true);
-                    hidePageLoading();
-                    reject(error);
-                }
-            });
-
-            lastRenderPromise = renderPromise;
-        }
-
-        /**
-         * Volta para a tela da biblioteca.
-         */
-        function backToLibrary() {
-            readerView.classList.remove('active');
-            // Hide reader view completely after transition
-            readerView.addEventListener('transitionend', function handler() {
-                readerView.style.display = 'none';
-                libraryView.style.display = 'flex'; // Show library view
-                readerView.removeEventListener('transitionend', handler);
-            });
-            currentBook = null; // Clear current book
-            pdfDoc = null; // Clear PDF document
-        }
-
-        // --- Event Listeners ---
-
-        /**
-         * Evento para adicionar um novo livro.
-         */
-        pdfUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                // Basic validation for allowed types
-                const allowedTypes = [
-                    'application/pdf',
-                    'text/plain',
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-                    'application/vnd.openxmlformats-officedocument.presentationml.presentation' // .pptx
-                ];
-                if (allowedTypes.includes(file.type)) {
-                    addBook(file);
                 } else {
-                    showMessage(`Tipo de arquivo "${file.type}" não suportado para importação.`, true);
+                    console.error('Estrutura de resposta da API inesperada:', result);
+                    const errorMsg = "(não consegui processar a resposta da ia dessa vez, foi mal kk)";
+                    chatHistory.push({ role: "model", parts: [{text: errorMsg }]});
+                    await displayAiResponseSequentially(errorMsg); 
                 }
-            }
-        });
 
-        /**
-         * Evento para o botão "Voltar para a Biblioteca".
-         */
-        backToLibraryBtn.addEventListener('click', backToLibrary);
-
-        /**
-         * Evento para o botão "Página Anterior".
-         */
-        prevPageBtn.addEventListener('click', () => {
-            if (currentBook && currentBook.type.includes('pdf')) {
-                renderPage(currentBook.currentPage - 1);
-            }
-        });
-
-        /**
-         * Evento para o botão "Próxima Página".
-         */
-        nextPageBtn.addEventListener('click', () => {
-            if (currentBook && currentBook.type.includes('pdf')) {
-                renderPage(currentBook.currentPage + 1);
-            }
-        });
-
-        // --- Dragging for Page Turn (Arrastar para Virar Página) ---
-
-        /**
-         * Obtém a coordenada X do evento (mouse ou toque).
-         * @param {Event} e - O objeto do evento.
-         * @returns {number} A coordenada X.
-         */
-        function getClientX(e) {
-            return e.touches ? e.touches[0].clientX : e.clientX;
+            } catch (error) {
+                if(!loadingIndicator.classList.contains('hidden')) hideLoading(); 
+                console.error('Erro ao buscar resposta da IA:', error);
+                const errorMsgForChat = `ixi, deu um erro aqui: ${error.message} kk`;
+                chatHistory.push({ role: "model", parts: [{text: errorMsgForChat}]});
+                await displayAiResponseSequentially(errorMsgForChat); 
+                showError(`foi mal, não consegui pegar a resposta. ${error.message}`);
+            } 
         }
-
-        /**
-         * Inicia o arraste (mouse ou toque).
-         * @param {Event} e - O objeto do evento.
-         */
-        function handleDragStart(e) {
-            if (currentBook && !currentBook.type.includes('pdf')) return; // Apenas para PDFs
-            isDragging = true;
-            initialClientX = getClientX(e);
-            pdfCanvas.style.cursor = 'grabbing';
-            pdfCanvas.style.transition = 'none'; // Desabilita a transição durante o arraste
-        }
-
-        /**
-         * Move o canvas enquanto arrasta (mouse ou toque).
-         * @param {Event} e - O objeto do evento.
-         */
-        function handleDragMove(e) {
-            if (!isDragging || !pdfDoc) return;
-            const dx = getClientX(e) - initialClientX;
-            // Aplica uma leve translação horizontal para dar feedback durante o arraste
-            pdfCanvas.style.transform = `translateX(${dx}px)`;
-        }
-
-        /**
-         * Finaliza o arraste e decide se vira a página (mouse ou toque).
-         * @param {Event} e - O objeto do evento.
-         */
-        function handleDragEnd(e) {
-            if (!isDragging || !pdfDoc) return;
-            isDragging = false;
-            pdfCanvas.style.cursor = 'grab';
-            pdfCanvas.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out'; // Reabilita a transição
-
-            const endX = getClientX(e);
-            const dx = endX - initialClientX;
-
-            if (Math.abs(dx) > dragThreshold) {
-                // Se arrastado significativamente
-                if (dx < 0) { // Arrastado para a esquerda (próxima página)
-                    if (currentBook.currentPage < pdfDoc.numPages) {
-                        // Apply animation for next page
-                        pdfCanvas.style.transform = `translateX(-100%) scale(0.95)`;
-                        pdfCanvas.style.opacity = '0';
-                        setTimeout(() => {
-                            renderPage(currentBook.currentPage + 1).then(() => {
-                                pdfCanvas.style.transform = `translateX(0) scale(1)`;
-                                pdfCanvas.style.opacity = '1';
-                            });
-                        }, 300); // Wait for the transition to complete
-                    } else {
-                        // Snap back if no next page
-                        pdfCanvas.style.transform = `translateX(0)`;
-                        showMessage('Você está na última página.', false);
-                    }
-                } else { // Arrastado para a direita (página anterior)
-                    if (currentBook.currentPage > 1) {
-                        // Apply animation for previous page
-                        pdfCanvas.style.transform = `translateX(100%) scale(0.95)`;
-                        pdfCanvas.style.opacity = '0';
-                        setTimeout(() => {
-                            renderPage(currentBook.currentPage - 1).then(() => {
-                                pdfCanvas.style.transform = `translateX(0) scale(1)`;
-                                pdfCanvas.style.opacity = '1';
-                            });
-                        }, 300); // Wait for the transition to complete
-                    } else {
-                        // Snap back if no previous page
-                        pdfCanvas.style.transform = `translateX(0)`;
-                        showMessage('Você está na primeira página.', false);
-                    }
-                }
-            } else {
-                // Snap back if not enough drag
-                pdfCanvas.style.transform = `translateX(0)`;
-            }
-        }
-
-        /**
-         * Reseta o arraste se o mouse/toque sair do canvas enquanto arrasta.
-         */
-        function handleDragLeaveOrCancel() {
-            if (isDragging) {
-                isDragging = false;
-                pdfCanvas.style.cursor = 'grab';
-                pdfCanvas.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-                pdfCanvas.style.transform = `translateX(0)`;
-            }
-        }
-
-        // --- Adiciona os listeners de eventos de mouse e toque ao canvas ---
-        pdfCanvas.addEventListener('mousedown', handleDragStart);
-        pdfCanvas.addEventListener('mousemove', handleDragMove);
-        pdfCanvas.addEventListener('mouseup', handleDragEnd);
-        pdfCanvas.addEventListener('mouseleave', handleDragLeaveOrCancel); // Para mouse leaving canvas
-
-        pdfCanvas.addEventListener('touchstart', handleDragStart);
-        pdfCanvas.addEventListener('touchmove', handleDragMove);
-        pdfCanvas.addEventListener('touchend', handleDragEnd);
-        pdfCanvas.addEventListener('touchcancel', handleDragLeaveOrCancel); // Para interrupções de toque
-
-        // --- Initial Load ---
-        window.onload = loadBooksFromLocalStorage;
-
     </script>
+
 </body>
 </html>
