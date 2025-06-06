@@ -376,7 +376,7 @@
                 };
                 const apiPayloadContents = [systemInstruction, ...chatHistory];
                 const payload = { contents: apiPayloadContents, generationConfig: {} }; 
-                const apiKey = "";
+                const apiKey = "AIzaSyCD_DOMkJntTqtG3Q1ROUv0m8DgoStL-JA";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
