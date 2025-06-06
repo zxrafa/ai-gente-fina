@@ -376,7 +376,8 @@
                 };
                 const apiPayloadContents = [systemInstruction, ...chatHistory];
                 const payload = { contents: apiPayloadContents, generationConfig: {} }; 
-                const apiKey = "AIzaSyCD_DOMkJntTqtG3Q1ROUv0m8DgoStL-JA";
+                // CHAVE API INSERIDA AQUI
+                const apiKey = "AIzaSyCD_DOMkJntTqtG3Q1ROUv0m8DgoStL-JA"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -457,10 +458,6 @@
                 if (!signal || !signal.aborted) { // Reabilita input apenas se não foi abortado (ou se o signal não existe)
                     enableInput();
                 } else {
-                    // Se foi abortado por uma nova submissão, o novo handlePrompt cuidará de reabilitar quando apropriado.
-                    // No entanto, precisamos garantir que o input seja habilitado se um abort foi devido a uma interrupção,
-                    // mas não foi seguido por uma nova submissão imediata (cenário menos comum, mas possível).
-                    // Uma forma simples é reabilitar de qualquer forma, e o próximo handlePrompt desabilitará se iniciar.
                     enableInput();
                 }
             }
