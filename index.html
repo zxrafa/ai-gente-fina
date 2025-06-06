@@ -9,16 +9,13 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            /* Tema Escuro Brasil - Fundo Principal */
-            background-color: #1a202c; /* Cinza bem escuro (Tailwind gray-900) */
+            background-color: #1a202c; 
         }
         .chat-container {
-             /* Cinza um pouco mais claro para o container do chat */
-            background-color: #2d3748; /* Tailwind gray-800 */
+            background-color: #2d3748; 
         }
         .header-brasil {
-            /* Gradiente verde e amarelo para o cabeçalho */
-            background-image: linear-gradient(to right, #22543d, #ddb337); /* Verde escuro e Amarelo queimado */
+            background-image: linear-gradient(to right, #22543d, #ddb337); 
         }
         .chat-bubble {
             max-width: 75%;
@@ -29,85 +26,92 @@
             line-height: 1.5;
         }
         .user-bubble {
-            /* Verde para o balão do usuário */
-            background-color: #2f855a; /* Tailwind green-700 */
-            color: #f0fff4; /* Verde bem clarinho, quase branco */
+            background-color: #2f855a; 
+            color: #f0fff4; 
             margin-left: auto;
             border-bottom-right-radius: 5px;
         }
         .ai-bubble {
-            /* Cinza escuro para o balão da IA */
-            background-color: #4a5568; /* Tailwind gray-700 */
-            color: #e2e8f0; /* Cinza bem claro (Tailwind slate-200) */
+            background-color: #4a5568; 
+            color: #e2e8f0; 
             margin-right: auto;
             border-bottom-left-radius: 5px;
         }
+        .system-notification-bubble { /* Estilo para notificações do sistema */
+            background-color: #b7791f; /* Um tom de marrom/dourado para destaque */
+            color: #f7fafc; /* Texto claro */
+            font-style: italic;
+            font-size: 0.9em;
+            margin-left: auto;
+            margin-right: auto; /* Centralizado */
+            max-width: 85%;
+            text-align: center;
+        }
         .typing-indicator-bubble {
-            background-color: #4a5568; /* Tailwind gray-700 */
-            color: #a0aec0; /* Tailwind gray-500 para os pontinhos */
+            background-color: #4a5568; 
+            color: #a0aec0; 
         }
         .input-area-bg {
-            background-color: #2c3642; /* Um tom entre gray-800 e gray-900 */
+            background-color: #2c3642; 
         }
         .prompt-input-style {
-            background-color: #4a5568; /* Tailwind gray-700 */
-            color: #e2e8f0; /* Texto claro */
-            border-color: #ecc94b; /* Borda amarela (Tailwind yellow-500) */
+            background-color: #4a5568; 
+            color: #e2e8f0; 
+            border-color: #ecc94b; 
         }
         .prompt-input-style::placeholder {
-            color: #a0aec0; /* Tailwind gray-500 */
+            color: #a0aec0; 
         }
-        .prompt-input-style:disabled { /* Estilo para input desabilitado */
-            background-color: #3b4554; /* Um pouco mais escuro que o normal */
+        .prompt-input-style:disabled { 
+            background-color: #3b4554; 
             cursor: not-allowed;
         }
         .submit-button-brasil {
-            background-color: #ecc94b; /* Amarelo (Tailwind yellow-500) */
-            color: #1a202c; /* Texto escuro para contraste com amarelo */
+            background-color: #ecc94b; 
+            color: #1a202c; 
         }
         .submit-button-brasil:hover {
-            background-color: #d69e2e; /* Amarelo mais escuro (Tailwind yellow-600) */
+            background-color: #d69e2e; 
         }
-        .submit-button-brasil:disabled { /* Estilo para botão desabilitado */
-            background-color: #b08c2a; /* Amarelo mais escuro e opaco */
+        .submit-button-brasil:disabled { 
+            background-color: #b08c2a; 
             color: #4a5568;
             cursor: not-allowed;
         }
         .loading-spinner {
             border: 4px solid rgba(255, 255, 255, 0.1);
-            border-left-color: #ecc94b; /* Amarelo para o spinner */
+            border-left-color: #ecc94b; 
             border-radius: 50%;
             width: 24px;
             height: 24px;
             animation: spin 1s linear infinite;
         }
         .loading-text-color {
-            color: #cbd5e0; /* Texto cinza claro para "pensando" */
+            color: #cbd5e0; 
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        /* Scrollbar styling para tema escuro */
         #chat-output::-webkit-scrollbar {
             width: 8px;
         }
         #chat-output::-webkit-scrollbar-track {
-            background: #2d3748; /* Fundo da trilha do scroll (cor do container) */
+            background: #2d3748; 
             border-radius: 10px;
         }
         #chat-output::-webkit-scrollbar-thumb {
-            background: #4a5568; /* Cor da barra de scroll (Tailwind gray-700) */
+            background: #4a5568; 
             border-radius: 10px;
         }
         #chat-output::-webkit-scrollbar-thumb:hover {
-            background: #718096; /* Cor da barra ao passar o mouse (Tailwind gray-600) */
+            background: #718096; 
         }
         .error-modal-bg {
-            background-color: #2d3748; /* Fundo do modal de erro */
-            color: #e2e8f0; /* Texto claro no modal */
+            background-color: #2d3748; 
+            color: #e2e8f0; 
         }
         .error-modal-title {
-            color: #f56565; /* Vermelho para o título do erro (Tailwind red-500) */
+            color: #f56565; 
         }
 
     </style>
@@ -115,7 +119,6 @@
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-2xl chat-container shadow-xl rounded-lg flex flex-col h-[85vh]">
-        <!-- Header -->
         <header class="header-brasil text-white p-4 rounded-t-lg flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
@@ -125,7 +128,6 @@
             <h1 class="text-xl font-semibold">IA Gente Fina</h1>
         </header>
 
-        <!-- Chat Output -->
         <div id="chat-output" class="flex-grow p-6 space-y-4 overflow-y-auto">
             <div class="chat-bubble ai-bubble">
                 e aí! blz? manda a braba aí, no q posso te ajudar kk
@@ -139,7 +141,7 @@
 
         <div class="input-area-bg p-4 border-t border-gray-700 rounded-b-lg">
             <div class="flex items-center space-x-3">
-                <textarea id="prompt-input" rows="2" class="prompt-input-style flex-grow p-3 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none outline-none" placeholder="lança a pergunta aí..."></textarea>
+                <textarea id="prompt-input" rows="2" class="prompt-input-style flex-grow p-3 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none outline-none" placeholder="lança a pergunta aí... ou /aprender giria: sua giria"></textarea>
                 <button id="submit-button" class="submit-button-brasil font-semibold py-3 px-6 rounded-lg transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-800">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -170,9 +172,36 @@
         const closeErrorModalButton = document.getElementById('close-error-modal');
 
         let chatHistory = [{ role: "model", parts: [{ text: "e aí! blz? manda a braba aí, no q posso te ajudar kk" }] }];
-        
         let isAiCurrentlyResponding = false;
         let currentAiResponseAbortController = null;
+        
+        let learnedSlangs = [];
+
+        function loadSlangs() {
+            const storedSlangs = localStorage.getItem('iaGenteFinaSlangs');
+            if (storedSlangs) {
+                learnedSlangs = JSON.parse(storedSlangs);
+                console.log("Gírias carregadas:", learnedSlangs);
+            }
+        }
+
+        function saveSlang(slang) {
+            if (slang && !learnedSlangs.includes(slang)) {
+                learnedSlangs.push(slang);
+                localStorage.setItem('iaGenteFinaSlangs', JSON.stringify(learnedSlangs));
+                return true;
+            }
+            return false;
+        }
+        
+        function displaySystemNotification(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chat-bubble', 'system-notification-bubble');
+            messageDiv.textContent = text;
+            chatOutput.appendChild(messageDiv);
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+
 
         function displayMessage(text, sender) {
             const messageDiv = document.createElement('div');
@@ -232,8 +261,7 @@
                     let dots = 1;
                     typingInterval = setInterval(() => {
                         if (cancellationSignal.aborted) {
-                            clearInterval(typingInterval);
-                            return;
+                            clearInterval(typingInterval); return;
                         }
                         dots = (dots % 3) + 1;
                         typingBubble.textContent = '.'.repeat(dots);
@@ -241,16 +269,13 @@
                     
                     cancellationSignal.addEventListener('abort', () => clearInterval(typingInterval), { once: true });
 
-
                     if (cancellationSignal.aborted) throw new DOMException('Aborted before typing delay', 'AbortError');
                     const typingDelay = Math.max(500, Math.min(2500, part.length * 45 + Math.random() * 500));
                     await stoppableTimeout(typingDelay, cancellationSignal);
 
-                    clearInterval(typingInterval);
-                    typingInterval = null;
+                    clearInterval(typingInterval); typingInterval = null;
                     if (typingBubble && typingBubble.parentNode === chatOutput) {
-                        chatOutput.removeChild(typingBubble);
-                        typingBubble = null;
+                        chatOutput.removeChild(typingBubble); typingBubble = null;
                     }
                     
                     if (cancellationSignal.aborted) throw new DOMException('Aborted before message display delay', 'AbortError');
@@ -270,8 +295,7 @@
                     chatOutput.removeChild(typingBubble);
                 }
                 if (error.name === 'AbortError') {
-                    console.log("AI response display aborted.");
-                    return; 
+                    console.log("AI response display aborted."); return; 
                 }
                 console.error("Error in displayAiResponseSequentially:", error);
             }
@@ -279,12 +303,10 @@
 
         function showLoading() {
             loadingIndicator.classList.remove('hidden');
-            // Botão e input já são desabilitados no início de handlePrompt
         }
 
         function hideLoading() {
             loadingIndicator.classList.add('hidden');
-            // Botão e input são reabilitados no finally de handlePrompt ou em erros específicos
         }
 
         function enableInput() {
@@ -298,7 +320,6 @@
             submitButton.disabled = true;
         }
 
-
         function showError(message) {
             errorMessageElement.textContent = message;
             errorModal.classList.remove('hidden');
@@ -309,6 +330,8 @@
             if (event.target === errorModal) errorModal.classList.add('hidden');
         });
 
+        window.onload = loadSlangs;
+
         submitButton.addEventListener('click', handlePrompt);
         promptInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -318,50 +341,49 @@
         });
 
         async function handlePrompt() {
-            // NOVO: Desabilita input e botão imediatamente
             disableInput(); 
+            const userInput = promptInput.value.trim();
 
-            const actualUserPrompt = promptInput.value.trim();
-
-            if (!actualUserPrompt) {
+            if (!userInput) {
                 showError("opa, esqueceu de digitar a pergunta kk");
-                enableInput(); // Reabilita se o prompt estiver vazio
+                enableInput(); 
                 return;
+            }
+
+            const learnSlangCommand = "/aprender giria:";
+            if (userInput.toLowerCase().startsWith(learnSlangCommand)) {
+                const newSlang = userInput.substring(learnSlangCommand.length).trim();
+                if (newSlang) {
+                    if (saveSlang(newSlang)) {
+                        displaySystemNotification(`boa! aprendi a gíria: "${newSlang}" kk`);
+                    } else {
+                        displaySystemNotification(`essa gíria "${newSlang}" eu já conhecia, parça!`);
+                    }
+                } else {
+                    displaySystemNotification("qual gíria vc quer me ensinar? manda tipo: /aprender giria: sua gíria maneira");
+                }
+                promptInput.value = '';
+                enableInput();
+                return; 
             }
 
             if (isAiCurrentlyResponding && currentAiResponseAbortController) {
                 console.log("Usuário interrompeu a IA.");
                 currentAiResponseAbortController.abort(); 
-
                 const existingTypingBubble = document.querySelector('.typing-indicator-bubble');
-                if (existingTypingBubble) {
-                    existingTypingBubble.remove();
-                }
+                if (existingTypingBubble) existingTypingBubble.remove();
                 
-                const reactions = [
-                    "po, me cortou no meio da frase kk",
-                    "calma aí, apressadinho(a)!",
-                    "eita, nem terminei de falar po...",
-                    "poxa, nem me deixou terminar :(",
-                    "tava quase lá...",
-                    "ah, vc me interrompeu...",
-                    "kkk opa, tava falando aqui",
-                    "quase me engasguei com as palavras kk",
-                    "segura a emoção aí, parça!"
-                ];
+                const reactions = ["po, me cortou no meio da frase kk", "calma aí, apressadinho(a)!", "eita, nem terminei de falar po...", "poxa, nem me deixou terminar :(", "tava quase lá...", "ah, vc me interrompeu...", "kkk opa, tava falando aqui", "quase me engasguei com as palavras kk", "segura a emoção aí, parça!"];
                 const reactionMessage = reactions[Math.floor(Math.random() * reactions.length)];
                 
-                // Não precisa de `await` aqui para a reação, ela é rápida
                 displayMessage(reactionMessage, 'ai'); 
                 chatHistory.push({ role: "model", parts: [{ text: reactionMessage }] });
-                
-                // Pequena pausa visual após a reação antes de seguir
                 await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); 
             }
 
-            displayMessage(actualUserPrompt, 'user');
-            chatHistory.push({ role: "user", parts: [{ text: actualUserPrompt }] });
-            promptInput.value = ''; // Limpa o campo APÓS a lógica de interrupção e exibição do prompt
+            displayMessage(userInput, 'user');
+            chatHistory.push({ role: "user", parts: [{ text: userInput }] });
+            promptInput.value = ''; 
             
             isAiCurrentlyResponding = true; 
             currentAiResponseAbortController = new AbortController(); 
@@ -370,13 +392,17 @@
             showLoading();
 
             try {
-                const systemInstruction = {
-                    role: "user",
-                    parts: [{ text: "instrução de sistema: por favor, aja como um amigo super informal. use respostas curtas, gírias e 'kk'. se uma resposta tiver várias ideias curtas ou pausas naturais, separe-as com uma quebra de linha literal (o caractere \\n). isso fará com que apareçam como mensagens separadas na interface. mantenha tudo em minúsculas." }]
-                };
+                let slangInstructions = "";
+                if (learnedSlangs.length > 0) {
+                    slangInstructions = ` Ah, e meu parça aqui me ensinou umas gírias, tenta usar se combinar, blz? São elas: ${learnedSlangs.join(", ")}.`;
+                }
+
+                // ATUALIZAÇÃO DA INSTRUÇÃO DE SISTEMA
+                const systemInstructionText = `instrução de sistema: por favor, aja como um amigo muito próximo, super informal e bem "sem filtro" na resenha. use respostas curtas, gírias e 'kk'. se uma resposta tiver várias ideias curtas ou pausas naturais, separe-as com uma quebra de linha literal (o caractere \\n). isso fará com que apareçam como mensagens separadas na interface. mantenha tudo em minúsculas. pode soltar uns xingamentos mais diretos, como "caralho", "que merda", "fds", "putz", sempre de forma engraçada e como se estivesse falando com um brother, sem ofender de verdade e mantendo o tom de zoeira e camaradagem total.${slangInstructions}`;
+                
+                const systemInstruction = { role: "user", parts: [{ text: systemInstructionText }] };
                 const apiPayloadContents = [systemInstruction, ...chatHistory];
                 const payload = { contents: apiPayloadContents, generationConfig: {} }; 
-                // CHAVE API INSERIDA AQUI
                 const apiKey = "AIzaSyCD_DOMkJntTqtG3Q1ROUv0m8DgoStL-JA"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
@@ -390,7 +416,6 @@
 
                 if (signal.aborted) { 
                     console.log("Processamento da nova mensagem abortado antes da resposta da API ser exibida.");
-                    // O `finally` cuidará de reabilitar o input se necessário
                     return;
                 }
 
@@ -398,15 +423,8 @@
                     let errorText = await response.text(); 
                     let errorMessageFromServer = 'Detalhes não disponíveis do servidor.';
                     if (errorText) {
-                        try {
-                            const errorData = JSON.parse(errorText); 
-                            errorMessageFromServer = errorData?.error?.message || errorText;
-                        } catch (e) {
-                            errorMessageFromServer = errorText; 
-                        }
-                    } else {
-                        errorMessageFromServer = 'Resposta de erro vazia do servidor.';
-                    }
+                        try { const errorData = JSON.parse(errorText); errorMessageFromServer = errorData?.error?.message || errorText; } catch (e) { errorMessageFromServer = errorText; }
+                    } else { errorMessageFromServer = 'Resposta de erro vazia do servidor.'; }
                     throw new Error(`erro da api: ${response.status} ${response.statusText}. ${errorMessageFromServer}`);
                 }
 
@@ -418,15 +436,12 @@
                 if(signal.aborted) return; 
 
                 let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch (e) {
+                try { result = JSON.parse(responseText); } catch (e) {
                     if (signal.aborted) return;
                     console.error('Falha ao analisar JSON da resposta bem-sucedida da API:', e);
                     console.error('Texto da Resposta Recebida:', responseText);
                     throw new Error("A IA parece ter enviado uma resposta num formato esquisito. Não consegui entender, foi mal.");
                 }
-
 
                 if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
                     const aiResponseText = result.candidates[0].content.parts[0].text;
@@ -455,7 +470,7 @@
             } finally {
                 isAiCurrentlyResponding = false;
                 currentAiResponseAbortController = null; 
-                if (!signal || !signal.aborted) { // Reabilita input apenas se não foi abortado (ou se o signal não existe)
+                if (!signal || !signal.aborted) { 
                     enableInput();
                 } else {
                     enableInput();
