@@ -3,481 +3,582 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IA Gente Fina</title>
+    <title>Gerador de Placar Moderno (Estilo Exemplo)</title>
+    <!-- Inclui Tailwind CSS via CDN para estilização rápida e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Inclui html2canvas via CDN para funcionalidade de download de imagem -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        /* Define a fonte Inter para todo o corpo do documento */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a202c; 
         }
-        .chat-container {
-            background-color: #2d3748; 
+        /* Estilos para ocultar o input de arquivo nativo e estilizar o label */
+        .custom-file-input {
+            display: none; /* Esconde o input de arquivo nativo */
         }
-        .header-brasil {
-            background-image: linear-gradient(to right, #22543d, #ddb337); 
+        .custom-file-label {
+            cursor: pointer;
+            @apply bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full shadow transition duration-300 ease-in-out transform hover:scale-105 text-sm md:text-base whitespace-nowrap;
         }
-        .chat-bubble {
-            max-width: 75%;
-            padding: 10px 15px;
-            border-radius: 15px;
-            margin-bottom: 10px;
-            word-wrap: break-word;
-            line-height: 1.5;
+        /* Estilo específico para o label do segundo time */
+        .custom-file-label-purple { /* Mantido para input de upload, mas a cor do time será vermelha */
+            @apply bg-purple-500 hover:bg-purple-600;
         }
-        .user-bubble {
-            background-color: #2f855a; 
-            color: #f0fff4; 
-            margin-left: auto;
-            border-bottom-right-radius: 5px;
-        }
-        .ai-bubble {
-            background-color: #4a5568; 
-            color: #e2e8f0; 
-            margin-right: auto;
-            border-bottom-left-radius: 5px;
-        }
-        .system-notification-bubble { /* Estilo para notificações do sistema */
-            background-color: #b7791f; /* Um tom de marrom/dourado para destaque */
-            color: #f7fafc; /* Texto claro */
-            font-style: italic;
-            font-size: 0.9em;
-            margin-left: auto;
-            margin-right: auto; /* Centralizado */
-            max-width: 85%;
-            text-align: center;
-        }
-        .typing-indicator-bubble {
-            background-color: #4a5568; 
-            color: #a0aec0; 
-        }
-        .input-area-bg {
-            background-color: #2c3642; 
-        }
-        .prompt-input-style {
-            background-color: #4a5568; 
-            color: #e2e8f0; 
-            border-color: #ecc94b; 
-        }
-        .prompt-input-style::placeholder {
-            color: #a0aec0; 
-        }
-        .prompt-input-style:disabled { 
-            background-color: #3b4554; 
-            cursor: not-allowed;
-        }
-        .submit-button-brasil {
-            background-color: #ecc94b; 
-            color: #1a202c; 
-        }
-        .submit-button-brasil:hover {
-            background-color: #d69e2e; 
-        }
-        .submit-button-brasil:disabled { 
-            background-color: #b08c2a; 
-            color: #4a5568;
-            cursor: not-allowed;
-        }
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-left-color: #ecc94b; 
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        .loading-text-color {
-            color: #cbd5e0; 
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        #chat-output::-webkit-scrollbar {
-            width: 8px;
-        }
-        #chat-output::-webkit-scrollbar-track {
-            background: #2d3748; 
-            border-radius: 10px;
-        }
-        #chat-output::-webkit-scrollbar-thumb {
-            background: #4a5568; 
-            border-radius: 10px;
-        }
-        #chat-output::-webkit-scrollbar-thumb:hover {
-            background: #718096; 
-        }
-        .error-modal-bg {
-            background-color: #2d3748; 
-            color: #e2e8f0; 
-        }
-        .error-modal-title {
-            color: #f56565; 
+        /* Estilo para o container principal do placar */
+        .scoreboard-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9; /* Mantém a proporção de 16:9 */
+            overflow: hidden;
+            border-radius: 0; /* Totalmente quadrado */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            background-color: transparent; /* O fundo é a imagem borrada */
         }
 
+        /* Estilo para a camada de fundo com a imagem e desfoque */
+        #scoreboardBackgroundBlur {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(5px); /* Aplica o desfoque diretamente na imagem de fundo */
+            -webkit-filter: blur(5px); /* Suporte para Safari */
+            z-index: 1; /* Fica abaixo do placar */
+            border-radius: 0; /* Totalmente quadrado */
+        }
+
+        /* Estilo para o overlay do placar principal (preto com opacidade, sem blur) */
+        .scoreboard-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7); /* Fundo preto semi-transparente para o placar */
+            display: flex;
+            flex-direction: column; /* Conteúdo em coluna para ter a barra inferior */
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem; /* Padding geral */
+            padding-bottom: 6rem; /* Aumentado o padding inferior para os nomes não serem cortados */
+            z-index: 2; /* Fica acima do background borrado */
+        }
+
+        /* Seção de times e scores */
+        .scoreboard-main-content {
+            display: flex;
+            flex-grow: 1; /* Preenche o espaço disponível */
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .team-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin: 0 1.5rem; /* Espaçamento entre os times */
+            width: 180px; /* Largura fixa para os blocos dos times, ajustar conforme necessário */
+            flex-shrink: 0; /* Não encolhe os blocos */
+            justify-content: center; /* Centraliza verticalmente o conteúdo interno */
+        }
+        @media (min-width: 768px) {
+            .team-display {
+                width: 250px; /* Largura maior para desktop */
+            }
+        }
+
+        .team-logo-wrapper {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%; /* **MANTIDO REDONDO** */
+            padding: 0.5rem;
+            border: 4px solid; /* A cor da borda será definida dinamicamente */
+            margin-bottom: 0.5rem;
+            width: 120px; /* Tamanho do wrapper do logo */
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; /* Impede que o logo encolha */
+        }
+        .logo-img-display {
+            width: 100px; /* Tamanho real da imagem do logo dentro do wrapper */
+            height: 100px;
+            object-fit: contain;
+            border-radius: 50%; /* **MANTIDO REDONDO** */
+        }
+
+        .team-name-text-display {
+            font-size: 1.8rem; /* Tamanho maior para nomes */
+            font-weight: 700;
+            color: #ccc;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            margin-top: 1.5rem; /* Aumentado para dar mais espaço entre o score e o nome */
+            margin-bottom: 0;
+            white-space: nowrap; /* Impede quebras de linha */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Adiciona '...' se o texto for muito longo */
+            max-width: 100%; /* Garante que não transborde */
+            line-height: 1.3; /* Ajuste para garantir que o texto tenha espaço suficiente */
+        }
+        @media (min-width: 768px) {
+            .team-name-text-display {
+                font-size: 2.5rem;
+            }
+        }
+
+        .score-text-display {
+            font-size: 5rem; /* Tamanho grande para scores */
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            line-height: 1; /* Ajusta a altura da linha para o número */
+            margin-bottom: 0.5rem; /* Adicionado espaço abaixo do score */
+        }
+        @media (min-width: 768px) {
+            .score-text-display {
+                font-size: 8rem;
+            }
+        }
+        .score-separator {
+            font-size: 4rem; /* Tamanho do 'X' */
+            font-weight: 900;
+            color: #fff; /* Cor do 'X' alterada para branco */
+            text-shadow: 0 3px 10px rgba(0,0,0,0.6);
+            margin: 0 1rem;
+        }
+        @media (min-width: 768px) {
+            .score-separator {
+                font-size: 7rem;
+            }
+        }
+
+        /* Barra inferior para descrição do jogo */
+        .match-description-bar {
+            background-color: rgba(0, 0, 0, 0.8);
+            width: calc(100% + 3rem); /* Ocupa a largura total mais o padding do overlay (2 * 1.5rem) */
+            padding: 0.8rem 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 0; /* Totalmente quadrado */
+            margin-top: auto; /* Empurra para o final do flex container */
+            margin-bottom: -1.5rem; /* Ajusta para se alinhar com o padding do container principal */
+            position: relative;
+            z-index: 3;
+        }
+        @media (min-width: 768px) {
+            .match-description-bar {
+                font-size: 2rem;
+                padding: 1.2rem 1rem;
+            }
+        }
+
+        /* Efeito de destaque para o vencedor */
+        /* Anima box-shadow sutilmente, mantendo a cor da borda original do time */
+        .winner-glow {
+            animation: pulse-shadow 1.5s infinite alternate;
+        }
+        @keyframes pulse-shadow {
+            0% { box-shadow: 0 0 5px rgba(255,255,255,0.4), 0 0 10px rgba(255,255,255,0.2); }
+            100% { box-shadow: 0 0 15px rgba(255,255,255,0.8), 0 0 30px rgba(255,255,255,0.5); }
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<body class="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col items-center justify-center p-6">
 
-    <div class="w-full max-w-2xl chat-container shadow-xl rounded-lg flex flex-col h-[85vh]">
-        <header class="header-brasil text-white p-4 rounded-t-lg flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                <path d="M2 17l10 5 10-5"></path>
-                <path d="M2 12l10 5 10-5"></path>
-            </svg>
-            <h1 class="text-xl font-semibold">IA Gente Fina</h1>
-        </header>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+        Gerador de Placar Moderno
+    </h1>
 
-        <div id="chat-output" class="flex-grow p-6 space-y-4 overflow-y-auto">
-            <div class="chat-bubble ai-bubble">
-                e aí! blz? manda a braba aí, no q posso te ajudar kk
+    <div class="bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-700 w-full max-w-2xl mb-8">
+        <div class="grid grid-cols-1 gap-4 mb-4">
+            <!-- Entradas para o Time 1 -->
+            <div class="flex flex-col md:flex-row items-center gap-4 bg-gray-700 p-4 rounded-xl">
+                <label for="team1Name" class="text-lg font-semibold text-blue-300 w-full md:w-1/3">Time 1:</label>
+                <input
+                    type="text"
+                    id="team1Name"
+                    value="Palmeiras"
+                    class="p-2 rounded-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-transparent flex-grow"
+                    placeholder="Nome do Time 1"
+                />
+                <input
+                    type="number"
+                    id="team1Score"
+                    value="0"
+                    class="p-2 rounded-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-transparent w-20 text-center"
+                    min="0"
+                />
+                <!-- Label customizado para o upload de logo do Time 1 -->
+                <label for="team1Logo" class="custom-file-label">
+                    Escolher Logo
+                </label>
+                <input
+                    type="file"
+                    id="team1Logo"
+                    accept="image/*"
+                    class="custom-file-input" <!-- Esconde o input de arquivo nativo -->
+                />
+                <span id="team1FileName" class="text-gray-400 text-sm italic whitespace-nowrap">Nenhum arquivo</span>
+                <img id="team1LogoPreview" src="" alt="Logo Time 1" class="hidden w-16 h-16 object-contain rounded-full shadow-md border-2 border-blue-500" />
+            </div>
+
+            <!-- Entradas para o Time 2 -->
+            <div class="flex flex-col md:flex-row items-center gap-4 bg-gray-700 p-4 rounded-xl">
+                <label for="team2Name" class="text-lg font-semibold text-purple-300 w-full md:w-1/3">Time 2:</label>
+                <input
+                    type="text"
+                    id="team2Name"
+                    value="Porto"
+                    class="p-2 rounded-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 focus:ring-1 focus:ring-purple-500 focus:border-transparent flex-grow"
+                    placeholder="Nome do Time 2"
+                />
+                <input
+                    type="number"
+                    id="team2Score"
+                    value="0"
+                    class="p-2 rounded-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 focus:ring-1 focus:ring-purple-500 focus:border-transparent w-20 text-center"
+                    min="0"
+                />
+                <!-- Label customizado para o upload de logo do Time 2 -->
+                <label for="team2Logo" class="custom-file-label custom-file-label-purple">
+                    Escolher Logo
+                </label>
+                <input
+                    type="file"
+                    id="team2Logo"
+                    accept="image/*"
+                    class="custom-file-input" <!-- Esconde o input de arquivo nativo -->
+                />
+                <span id="team2FileName" class="text-gray-400 text-sm italic whitespace-nowrap">Nenhum arquivo</span>
+                <img id="team2LogoPreview" src="" alt="Logo Time 2" class="hidden w-16 h-16 object-contain rounded-full shadow-md border-2 border-purple-500" />
+            </div>
+            <!-- Campo para descrição da partida -->
+            <div class="flex flex-col">
+                <label for="matchDescription" class="text-lg font-semibold mb-2 text-gray-300">Descrição da Partida:</label>
+                <input
+                    type="text"
+                    id="matchDescription"
+                    value="MUNDIAL DE CLUBES"
+                    class="p-2 rounded-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 focus:ring-1 focus:ring-gray-500 focus:border-transparent"
+                    placeholder="Ex: Campeonato Brasileiro, Final"
+                />
             </div>
         </div>
 
-        <div id="loading-indicator" class="hidden p-4 flex items-center justify-center">
-            <div class="loading-spinner mr-3"></div>
-            <p class="loading-text-color">deixa eu ver aqui rapidinho...</p>
-        </div>
+        <p id="errorMessage" class="text-red-400 text-center mb-4 hidden"></p>
 
-        <div class="input-area-bg p-4 border-t border-gray-700 rounded-b-lg">
-            <div class="flex items-center space-x-3">
-                <textarea id="prompt-input" rows="2" class="prompt-input-style flex-grow p-3 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none outline-none" placeholder="lança a pergunta aí... ou /aprender giria: sua giria"></textarea>
-                <button id="submit-button" class="submit-button-brasil font-semibold py-3 px-6 rounded-lg transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
-            </div>
-        </div>
+        <button
+            id="generateBannerButton"
+            class="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
+        >
+            Gerar Banner do Placar
+        </button>
     </div>
 
-    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
-        <div class="error-modal-bg p-6 rounded-lg shadow-xl max-w-sm w-full">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold error-modal-title">ops, deu ruim kk</h3>
-                <button id="close-error-modal" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+    <!-- Contêiner do Banner do Placar (inicialmente oculto) -->
+    <div id="scoreboardBannerContainer" class="hidden flex flex-col items-center w-full max-w-4xl">
+        <div id="scoreboard-banner" class="scoreboard-container">
+            <!-- Novo elemento para o background com blur -->
+            <div id="scoreboardBackgroundBlur"></div>
+
+            <!-- Conteúdo do placar (sobre o background com blur) -->
+            <div class="scoreboard-overlay">
+                <!-- Seção principal dos times e scores -->
+                <div class="scoreboard-main-content">
+                    <div id="team1Display" class="team-display">
+                        <span id="team1NameDisplay" class="team-name-text-display" style="color: #0D47A1;"></span> <!-- Cor do nome do Time 1: Azul Forte -->
+                        <div id="team1LogoWrapper" class="team-logo-wrapper" style="border-color: #0D47A1;"> <!-- Cor da borda do logo do Time 1: Azul Forte -->
+                            <img id="bannerTeam1Logo" src="" alt="Logo Time 1" class="logo-img-display" crossOrigin="anonymous" />
+                        </div>
+                        <p id="bannerTeam1Score" class="score-text-display"></p>
+                    </div>
+
+                    <div id="scoreSeparator" class="score-separator">X</div>
+
+                    <div id="team2Display" class="team-display">
+                        <span id="team2NameDisplay" class="team-name-text-display" style="color: #B71C1C;"></span> <!-- Cor do nome do Time 2: Vermelho Forte -->
+                        <div id="team2LogoWrapper" class="team-logo-wrapper" style="border-color: #B71C1C;"> <!-- Cor da borda do logo do Time 2: Vermelho Forte -->
+                            <img id="bannerTeam2Logo" src="" alt="Logo Time 2" class="logo-img-display" crossOrigin="anonymous" />
+                        </div>
+                        <p id="bannerTeam2Score" class="score-text-display"></p>
+                    </div>
+                </div>
+
+                <!-- Barra inferior para descrição da partida -->
+                <div class="match-description-bar">
+                    <span id="matchDescriptionDisplay"></span>
+                </div>
             </div>
-            <p id="error-message" class="text-gray-300"></p>
         </div>
+        <!-- Botão para baixar o banner como PNG -->
+        <button
+            id="downloadPngButton"
+            class="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+        >
+            Baixar como PNG
+        </button>
     </div>
+
+    <p class="text-gray-400 text-center mt-8 max-w-xl">
+        Preencha os detalhes dos times, adicione os logotipos e clique em "Gerar Banner do Placar" para criar sua imagem personalizada!
+    </p>
 
     <script>
-        const promptInput = document.getElementById('prompt-input');
-        const submitButton = document.getElementById('submit-button');
-        const chatOutput = document.getElementById('chat-output');
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const errorModal = document.getElementById('error-modal');
-        const errorMessageElement = document.getElementById('error-message');
-        const closeErrorModalButton = document.getElementById('close-error-modal');
+        // Função para obter referências aos elementos HTML
+        const getElements = () => {
+            const elements = {
+                team1NameInput: document.getElementById('team1Name'),
+                team2NameInput: document.getElementById('team2Name'),
+                team1ScoreInput: document.getElementById('team1Score'),
+                team2ScoreInput: document.getElementById('team2Score'),
+                team1LogoInput: document.getElementById('team1Logo'),
+                team2LogoInput: document.getElementById('team2Logo'),
+                team1LogoPreview: document.getElementById('team1LogoPreview'),
+                team2LogoPreview: document.getElementById('team2LogoPreview'),
+                team1FileNameSpan: document.getElementById('team1FileName'),
+                team2FileNameSpan: document.getElementById('team2FileName'),
+                matchDescriptionInput: document.getElementById('matchDescription'),
+                generateBannerButton: document.getElementById('generateBannerButton'),
+                errorMessageElement: document.getElementById('errorMessage'),
+                scoreboardBannerContainer: document.getElementById('scoreboardBannerContainer'),
+                scoreboardBanner: document.getElementById('scoreboard-banner'),
+                scoreboardBackgroundBlur: document.getElementById('scoreboardBackgroundBlur'),
+                bannerTeam1Logo: document.getElementById('bannerTeam1Logo'),
+                bannerTeam2Logo: document.getElementById('bannerTeam2Logo'),
+                team1NameDisplay: document.getElementById('team1NameDisplay'),
+                team2NameDisplay: document.getElementById('team2NameDisplay'),
+                bannerTeam1Score: document.getElementById('bannerTeam1Score'),
+                bannerTeam2Score: document.getElementById('bannerTeam2Score'),
+                team1Display: document.getElementById('team1Display'),
+                team2Display: document.getElementById('team2Display'),
+                team1LogoWrapper: document.getElementById('team1LogoWrapper'),
+                team2LogoWrapper: document.getElementById('team2LogoWrapper'),
+                matchDescriptionDisplay: document.getElementById('matchDescriptionDisplay'),
+                downloadPngButton: document.getElementById('downloadPngButton'),
+            };
 
-        let chatHistory = [{ role: "model", parts: [{ text: "e aí! blz? manda a braba aí, no q posso te ajudar kk" }] }];
-        let isAiCurrentlyResponding = false;
-        let currentAiResponseAbortController = null;
-        
-        let learnedSlangs = [];
-
-        function loadSlangs() {
-            const storedSlangs = localStorage.getItem('iaGenteFinaSlangs');
-            if (storedSlangs) {
-                learnedSlangs = JSON.parse(storedSlangs);
-                console.log("Gírias carregadas:", learnedSlangs);
+            // Para depuração: verificar se algum elemento é nulo
+            for (const key in elements) {
+                if (elements[key] === null) {
+                    console.error(`Element with ID '${key}' not found.`);
+                }
             }
-        }
+            return elements;
+        };
 
-        function saveSlang(slang) {
-            if (slang && !learnedSlangs.includes(slang)) {
-                learnedSlangs.push(slang);
-                localStorage.setItem('iaGenteFinaSlangs', JSON.stringify(learnedSlangs));
-                return true;
+        // Função para exibir mensagens de erro
+        const showErrorMessage = (message) => {
+            const { errorMessageElement } = getElements();
+            if (errorMessageElement) { // Adicionado verificação para garantir que o elemento existe
+                errorMessageElement.textContent = message;
+                errorMessageElement.classList.remove('hidden');
             }
-            return false;
-        }
-        
-        function displaySystemNotification(text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('chat-bubble', 'system-notification-bubble');
-            messageDiv.textContent = text;
-            chatOutput.appendChild(messageDiv);
-            chatOutput.scrollTop = chatOutput.scrollHeight;
-        }
+        };
 
+        // Função para ocultar mensagens de erro
+        const hideErrorMessage = () => {
+            const { errorMessageElement } = getElements();
+            if (errorMessageElement) { // Adicionado verificação
+                errorMessageElement.classList.add('hidden');
+            }
+        };
 
-        function displayMessage(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('chat-bubble');
-            if (sender === 'user') {
-                messageDiv.classList.add('user-bubble');
-                messageDiv.textContent = text;
+        // Função para lidar com o upload do logotipo e exibir prévia
+        const handleLogoUpload = (event, imgPreviewElement, fileNameSpan) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    imgPreviewElement.src = reader.result;
+                    imgPreviewElement.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+                fileNameSpan.textContent = file.name;
+                hideErrorMessage();
             } else {
-                messageDiv.classList.add('ai-bubble');
-                messageDiv.textContent = text.toLowerCase();
+                imgPreviewElement.src = '';
+                imgPreviewElement.classList.add('hidden');
+                fileNameSpan.textContent = 'Nenhum arquivo';
             }
-            chatOutput.appendChild(messageDiv);
-            chatOutput.scrollTop = chatOutput.scrollHeight;
-        }
+        };
 
-        function stoppableTimeout(delay, signal) {
-            return new Promise((resolve, reject) => {
-                if (signal.aborted) {
-                    reject(new DOMException('Aborted', 'AbortError'));
-                    return;
-                }
-                const timeoutId = setTimeout(resolve, delay);
-                signal.addEventListener('abort', () => {
-                    clearTimeout(timeoutId);
-                    reject(new DOMException('Aborted', 'AbortError'));
-                }, { once: true });
-            });
-        }
-        
-        async function displayAiResponseSequentially(fullResponseText, cancellationSignal) {
-            const processedResponseText = fullResponseText.replace(/\\n/g, '\n');
-            let responseParts = processedResponseText.split('\n').filter(part => part.trim() !== '');
-
-            if (responseParts.length === 0 && processedResponseText.trim() !== '') {
-                responseParts.push(processedResponseText.trim());
-            } else if (responseParts.length === 0) {
-                return;
-            }
-            
-            let typingBubble = null;
-            let typingInterval = null;
-
-            try {
-                if (cancellationSignal.aborted) return;
-                await stoppableTimeout(600 + Math.random() * 400, cancellationSignal);
-
-                for (const part of responseParts) {
-                    if (cancellationSignal.aborted) throw new DOMException('Aborted by loop check', 'AbortError');
-                    if (part.trim() === '') continue;
-
-                    typingBubble = document.createElement('div');
-                    typingBubble.classList.add('chat-bubble', 'ai-bubble', 'typing-indicator-bubble');
-                    typingBubble.textContent = '.';
-                    chatOutput.appendChild(typingBubble);
-                    chatOutput.scrollTop = chatOutput.scrollHeight;
-
-                    let dots = 1;
-                    typingInterval = setInterval(() => {
-                        if (cancellationSignal.aborted) {
-                            clearInterval(typingInterval); return;
-                        }
-                        dots = (dots % 3) + 1;
-                        typingBubble.textContent = '.'.repeat(dots);
-                    }, 350);
-                    
-                    cancellationSignal.addEventListener('abort', () => clearInterval(typingInterval), { once: true });
-
-                    if (cancellationSignal.aborted) throw new DOMException('Aborted before typing delay', 'AbortError');
-                    const typingDelay = Math.max(500, Math.min(2500, part.length * 45 + Math.random() * 500));
-                    await stoppableTimeout(typingDelay, cancellationSignal);
-
-                    clearInterval(typingInterval); typingInterval = null;
-                    if (typingBubble && typingBubble.parentNode === chatOutput) {
-                        chatOutput.removeChild(typingBubble); typingBubble = null;
-                    }
-                    
-                    if (cancellationSignal.aborted) throw new DOMException('Aborted before message display delay', 'AbortError');
-                    await stoppableTimeout(200 + Math.random() * 200, cancellationSignal);
-
-                    if (cancellationSignal.aborted) throw new DOMException('Aborted before displaying message', 'AbortError');
-                    displayMessage(part, 'ai');
-
-                    if (responseParts.indexOf(part) < responseParts.length - 1) {
-                        if (cancellationSignal.aborted) throw new DOMException('Aborted before next part delay', 'AbortError');
-                        await stoppableTimeout(500 + Math.random() * 500, cancellationSignal);
-                    }
-                }
-            } catch (error) {
-                if (typingInterval) clearInterval(typingInterval);
-                if (typingBubble && typingBubble.parentNode === chatOutput) {
-                    chatOutput.removeChild(typingBubble);
-                }
-                if (error.name === 'AbortError') {
-                    console.log("AI response display aborted."); return; 
-                }
-                console.error("Error in displayAiResponseSequentially:", error);
-            }
-        }
-
-        function showLoading() {
-            loadingIndicator.classList.remove('hidden');
-        }
-
-        function hideLoading() {
-            loadingIndicator.classList.add('hidden');
-        }
-
-        function enableInput() {
-            promptInput.disabled = false;
-            submitButton.disabled = false;
-            promptInput.focus();
-        }
-
-        function disableInput() {
-            promptInput.disabled = true;
-            submitButton.disabled = true;
-        }
-
-        function showError(message) {
-            errorMessageElement.textContent = message;
-            errorModal.classList.remove('hidden');
-        }
-
-        closeErrorModalButton.addEventListener('click', () => errorModal.classList.add('hidden'));
-        errorModal.addEventListener('click', (event) => {
-            if (event.target === errorModal) errorModal.classList.add('hidden');
-        });
-
-        window.onload = loadSlangs;
-
-        submitButton.addEventListener('click', handlePrompt);
-        promptInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handlePrompt();
-            }
-        });
-
-        async function handlePrompt() {
-            disableInput(); 
-            const userInput = promptInput.value.trim();
-
-            if (!userInput) {
-                showError("opa, esqueceu de digitar a pergunta kk");
-                enableInput(); 
+        // Função para gerar a imagem de fundo com IA
+        const generateAIAIBackground = async (winningTeamName, winningTeamColor) => {
+            const { generateBannerButton, scoreboardBackgroundBlur } = getElements();
+            if (!generateBannerButton || !scoreboardBackgroundBlur) { // Verificar existência dos elementos
+                showErrorMessage('Erro interno: elementos necessários para gerar o banner não encontrados.');
                 return;
             }
 
-            const learnSlangCommand = "/aprender giria:";
-            if (userInput.toLowerCase().startsWith(learnSlangCommand)) {
-                const newSlang = userInput.substring(learnSlangCommand.length).trim();
-                if (newSlang) {
-                    if (saveSlang(newSlang)) {
-                        displaySystemNotification(`boa! aprendi a gíria: "${newSlang}" kk`);
-                    } else {
-                        displaySystemNotification(`essa gíria "${newSlang}" eu já conhecia, parça!`);
-                    }
-                } else {
-                    displaySystemNotification("qual gíria vc quer me ensinar? manda tipo: /aprender giria: sua gíria maneira");
-                }
-                promptInput.value = '';
-                enableInput();
-                return; 
-            }
+            generateBannerButton.disabled = true;
+            generateBannerButton.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Gerando imagem...
+                </div>
+            `;
+            scoreboardBackgroundBlur.style.backgroundImage = '';
+            hideErrorMessage();
 
-            if (isAiCurrentlyResponding && currentAiResponseAbortController) {
-                console.log("Usuário interrompeu a IA.");
-                currentAiResponseAbortController.abort(); 
-                const existingTypingBubble = document.querySelector('.typing-indicator-bubble');
-                if (existingTypingBubble) existingTypingBubble.remove();
-                
-                const reactions = ["po, me cortou no meio da frase kk", "calma aí, apressadinho(a)!", "eita, nem terminei de falar po...", "poxa, nem me deixou terminar :(", "tava quase lá...", "ah, vc me interrompeu...", "kkk opa, tava falando aqui", "quase me engasguei com as palavras kk", "segura a emoção aí, parça!"];
-                const reactionMessage = reactions[Math.floor(Math.random() * reactions.length)];
-                
-                displayMessage(reactionMessage, 'ai'); 
-                chatHistory.push({ role: "model", parts: [{ text: reactionMessage }] });
-                await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100)); 
-            }
-
-            displayMessage(userInput, 'user');
-            chatHistory.push({ role: "user", parts: [{ text: userInput }] });
-            promptInput.value = ''; 
-            
-            isAiCurrentlyResponding = true; 
-            currentAiResponseAbortController = new AbortController(); 
-            const signal = currentAiResponseAbortController.signal;
-
-            showLoading();
+            // Prompt atualizado para gerar estádios aleatórios com a cor do time vencedor
+            const prompt = `Estádio de futebol lotado, arquitetura moderna, iluminação noturna, com predominância da cor ${winningTeamColor}, em proporção 16:9. Vista aérea para mostrar o campo e as arquibancadas, estilo realista, com blur para servir de fundo para placar.`;
 
             try {
-                let slangInstructions = "";
-                if (learnedSlangs.length > 0) {
-                    slangInstructions = ` Ah, e meu parça aqui me ensinou umas gírias, tenta usar se combinar, blz? São elas: ${learnedSlangs.join(", ")}.`;
-                }
-
-                // ATUALIZAÇÃO DA INSTRUÇÃO DE SISTEMA
-                const systemInstructionText = `instrução de sistema: por favor, aja como um amigo muito próximo, super informal e bem "sem filtro" na resenha. use respostas curtas, gírias e 'kk'. se uma resposta tiver várias ideias curtas ou pausas naturais, separe-as com uma quebra de linha literal (o caractere \\n). isso fará com que apareçam como mensagens separadas na interface. mantenha tudo em minúsculas. pode soltar uns xingamentos mais diretos, como "caralho", "que merda", "fds", "putz", sempre de forma engraçada e como se estivesse falando com um brother, sem ofender de verdade e mantendo o tom de zoeira e camaradagem total.${slangInstructions}`;
-                
-                const systemInstruction = { role: "user", parts: [{ text: systemInstructionText }] };
-                const apiPayloadContents = [systemInstruction, ...chatHistory];
-                const payload = { contents: apiPayloadContents, generationConfig: {} }; 
-                const apiKey = "AIzaSyCD_DOMkJntTqtG3Q1ROUv0m8DgoStL-JA"; 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const payload = {
+                    instances: { prompt: prompt },
+                    parameters: { "sampleCount": 1 }
+                };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
-                hideLoading();
-
-                if (signal.aborted) { 
-                    console.log("Processamento da nova mensagem abortado antes da resposta da API ser exibida.");
-                    return;
-                }
 
                 if (!response.ok) {
-                    let errorText = await response.text(); 
-                    let errorMessageFromServer = 'Detalhes não disponíveis do servidor.';
-                    if (errorText) {
-                        try { const errorData = JSON.parse(errorText); errorMessageFromServer = errorData?.error?.message || errorText; } catch (e) { errorMessageFromServer = errorText; }
-                    } else { errorMessageFromServer = 'Resposta de erro vazia do servidor.'; }
-                    throw new Error(`erro da api: ${response.status} ${response.statusText}. ${errorMessageFromServer}`);
+                    const errorData = await response.json();
+                    throw new Error(`Erro ao gerar imagem AI: ${errorData.error ? errorData.error.message : response.statusText}`);
                 }
 
-                const responseText = await response.text();
-                if (!responseText && !signal.aborted) {
-                    console.error('API success response was empty.');
-                    throw new Error("A IA respondeu com sucesso, mas não enviou nenhum conteúdo. Estranho kk");
-                }
-                if(signal.aborted) return; 
+                const result = await response.json();
 
-                let result;
-                try { result = JSON.parse(responseText); } catch (e) {
-                    if (signal.aborted) return;
-                    console.error('Falha ao analisar JSON da resposta bem-sucedida da API:', e);
-                    console.error('Texto da Resposta Recebida:', responseText);
-                    throw new Error("A IA parece ter enviado uma resposta num formato esquisito. Não consegui entender, foi mal.");
-                }
-
-                if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
-                    const aiResponseText = result.candidates[0].content.parts[0].text;
-                    if (!signal.aborted) { 
-                        chatHistory.push({ role: "model", parts: [{ text: aiResponseText }] });
-                        await displayAiResponseSequentially(aiResponseText, signal);
-                    }
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    scoreboardBackgroundBlur.style.backgroundImage = `url(${imageUrl})`;
                 } else {
-                    if (!signal.aborted) { 
-                        console.error('Estrutura de resposta da API inesperada:', result);
-                        const errorMsg = "(não consegui processar a resposta da ia dessa vez, foi mal kk)";
-                        chatHistory.push({ role: "model", parts: [{ text: errorMsg }] });
-                        await displayAiResponseSequentially(errorMsg, signal);
-                    }
+                    showErrorMessage('Não foi possível gerar a imagem de fundo. Tente novamente.');
                 }
             } catch (error) {
-                if (error.name !== 'AbortError') { 
-                    console.error('Erro ao buscar resposta da IA:', error);
-                    const errorMsgForChat = `ixi, deu um erro aqui: ${error.message} kk`;
-                    if (!signal.aborted) { 
-                         chatHistory.push({ role: "model", parts: [{ text: errorMsgForChat }] });
-                         await displayAiResponseSequentially(errorMsgForChat, signal); 
-                         showError(`foi mal, não consegui pegar a resposta. ${error.message}`);
-                    }
-                }
+                console.error('Erro na geração da imagem AI:', error);
+                showErrorMessage(`Falha na geração da imagem: ${error.message}`);
             } finally {
-                isAiCurrentlyResponding = false;
-                currentAiResponseAbortController = null; 
-                if (!signal || !signal.aborted) { 
-                    enableInput();
-                } else {
-                    enableInput();
-                }
+                generateBannerButton.disabled = false;
+                generateBannerButton.innerHTML = 'Gerar Banner do Placar';
             }
-        }
-    </script>
+        };
 
+        // Função para baixar o banner
+        const downloadBanner = async (format) => {
+            const { scoreboardBanner } = getElements();
+            if (!scoreboardBanner) {
+                showErrorMessage('Banner não encontrado para download.');
+                return;
+            }
+
+            try {
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const canvas = await window.html2canvas(scoreboardBanner, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    ignoreElements: (element) => {
+                        return element.id === 'team1LogoPreview' || element.id === 'team2LogoPreview';
+                    }
+                });
+                const image = canvas.toDataURL(`image/${format}`);
+                const link = document.createElement('a');
+                link.href = image;
+                link.download = `placar_moderno.${format}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Erro ao baixar o banner:', error);
+                showErrorMessage('Falha ao baixar o banner. Tente novamente.');
+            }
+        };
+
+        // Função principal para gerar o banner
+        const generateBanner = async () => {
+            const {
+                team1NameInput, team2NameInput, team1ScoreInput, team2ScoreInput,
+                team1LogoPreview, team2LogoPreview, matchDescriptionInput,
+                bannerTeam1Logo, bannerTeam2Logo, team1NameDisplay, team2NameDisplay,
+                bannerTeam1Score, bannerTeam2Score, scoreboardBannerContainer,
+                team1Display, team2Display, team1LogoWrapper, team2LogoWrapper, matchDescriptionDisplay
+            } = getElements();
+
+            if (!scoreboardBannerContainer) { // Adicionado verificação para o container principal
+                showErrorMessage('Erro interno: container do banner não encontrado.');
+                return;
+            }
+
+            const team1Name = team1NameInput.value;
+            const team2Name = team2NameInput.value;
+            const team1Score = Number(team1ScoreInput.value);
+            const team2Score = Number(team2ScoreInput.value);
+            const matchDescription = matchDescriptionInput.value;
+
+            // Reinicia classes de destaque e cores de borda
+            team1LogoWrapper.classList.remove('winner-glow');
+            team2LogoWrapper.classList.remove('winner-glow');
+            team1LogoWrapper.style.borderColor = '#0D47A1'; // Azul Forte padrão
+            team2LogoWrapper.style.borderColor = '#B71C1C'; // Vermelho Forte padrão
+
+            let winningTeam = '';
+            let winningTeamColor = ''; // Adicionada variável para a cor do time vencedor
+
+            if (team1Score > team2Score) {
+                winningTeam = team1Name;
+                winningTeamColor = 'azul forte'; // Define a cor para o prompt da IA
+                team1LogoWrapper.classList.add('winner-glow'); // Aplica glow apenas no wrapper do logo
+            } else if (team2Score > team1Score) {
+                winningTeam = team2Name;
+                winningTeamColor = 'vermelho forte'; // Define a cor para o prompt da IA
+                team2LogoWrapper.classList.add('winner-glow'); // Aplica glow apenas no wrapper do logo
+            } else {
+                showErrorMessage('O placar está empatado. Por favor, defina um vencedor para gerar a imagem de comemoração.');
+                scoreboardBannerContainer.classList.add('hidden');
+                return;
+            }
+
+            // Define os dados dos times no banner
+            team1NameDisplay.textContent = team1Name;
+            team2NameDisplay.textContent = team2Name;
+            bannerTeam1Score.textContent = team1Score;
+            bannerTeam2Score.textContent = team2Score;
+            matchDescriptionDisplay.textContent = matchDescription;
+
+            // Define os logotipos ou placeholders
+            bannerTeam1Logo.src = team1LogoPreview.src || `https://placehold.co/100x100/0D47A1/FFFFFF?text=${encodeURIComponent('Logo')}`;
+            bannerTeam2Logo.src = team2LogoPreview.src || `https://placehold.co/100x100/B71C1C/FFFFFF?text=${encodeURIComponent('Logo')}`;
+            bannerTeam1Logo.classList.remove('hidden');
+            bannerTeam2Logo.classList.remove('hidden');
+
+            await generateAIAIBackground(winningTeam, winningTeamColor); // Passa a cor do time para a função
+            scoreboardBannerContainer.classList.remove('hidden');
+        };
+
+        // Adiciona event listeners após o DOM ser completamente carregado
+        document.addEventListener('DOMContentLoaded', () => {
+            const { team1LogoInput, team2LogoInput, team1LogoPreview, team2LogoPreview, team1FileNameSpan, team2FileNameSpan, generateBannerButton, downloadPngButton } = getElements();
+
+            if (team1LogoInput) team1LogoInput.addEventListener('change', (e) => handleLogoUpload(e, team1LogoPreview, team1FileNameSpan));
+            if (team2LogoInput) team2LogoInput.addEventListener('change', (e) => handleLogoUpload(e, team2LogoPreview, team2FileNameSpan));
+            if (generateBannerButton) generateBannerButton.addEventListener('click', generateBanner);
+            if (downloadPngButton) downloadPngButton.addEventListener('click', () => downloadBanner('png'));
+
+            // Gerar o banner inicial ao carregar a página (com dados padrão)
+            generateBanner();
+        });
+    </script>
 </body>
 </html>
